@@ -1,0 +1,33 @@
+{
+  "expo": {
+    "name": "App Emergência",
+    "slug": "emergency-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/images/img_icon.png",
+    "splash": {
+      "image": "./assets/images/img_splash.png",
+      "resizeMode": "cover",
+      "backgroundColor": "#322F63"
+    },
+    "updates": {
+      "fallbackToCacheTimeout": 0
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/img_adaptive-icon.png",
+        "backgroundColor": "#322F63"
+      }
+    },
+    "web": {
+      "favicon": "./assets/images/img_favicon.png"
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
+    }
+  }
+}
