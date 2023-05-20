@@ -8,6 +8,6 @@ interface IProps extends StyledTextProps {}
 export const Text = styled.Text`
   font-size: ${(props: IProps) => props.fontSize ?? 16}px;
   font-family: ${(props: IProps) => props.fontFamily ?? theme.fonts.regular};
-  color: ${(props: IProps) => props.color ?? theme.colors.white};
+  color: ${(props: IProps) => props.color ?? theme.colors.primary};
   ${(props: IProps) => props.textAlign && `text-align: ${props.textAlign}`};
 `;

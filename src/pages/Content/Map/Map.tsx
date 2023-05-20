@@ -107,7 +107,7 @@ const Map = () => {
           {!!userLocation && (
             <MapMarker
               coordinate={userLocation}
-              backgroundColor={theme.colors.secundary}
+              backgroundColor={theme.colors.primary}
               onPress={() => zoomIn(userLocation)}
               icon={<MaterialIcons name="location-history" size={30} color={theme.colors.white} />}
             />
@@ -127,16 +127,12 @@ const Map = () => {
           justifyContent="space-between"
           alignSelf="center"
           alignItems="flex-end"
+          zIndex={100}
+          backgroundColor="red"
           width="90%">
           <Box alignItems="flex-end">
             <Box marginBottom="15px">
-              <Button
-                StartAdornment={
-                  <MaterialIcons name="gps-fixed" size={24} color={theme.colors.white} />
-                }
-                backgroundColor={theme.colors.secundary}
-                onPress={centerUserLocation}
-              />
+              <StyledText value="AA" />
             </Box>
           </Box>
         </Row>

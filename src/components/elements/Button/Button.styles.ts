@@ -10,20 +10,19 @@ interface IProps {
 }
 
 export const TouchableTextButton = styled.TouchableOpacity`
-  padding: 10px;
+  padding-vertical: 12px;
+  padding-horizontal: 10px;
   align-items: center;
   justify-content: center;
   flex-direction: row;
-  border-radius: ${({ borderRadius }: IProps) => borderRadius ?? '26px'};
+  border-radius: ${({ borderRadius }: IProps) => borderRadius ?? '14px'};
   ${({ width }: IProps) => `width: ${width}`}
   background-color: ${({ backgroundColor }: IProps) => backgroundColor ?? theme.colors.primary};
 `;
 
 export const TouchableButton = styled.TouchableOpacity`
-  height: 40px;
-  width: 40px;
   align-items: center;
   justify-content: center;
   border-radius: 26px;
-  background-color: ${({ backgroundColor }: IProps) => backgroundColor ?? theme.colors.primary};
+  background-color: ${({ backgroundColor }: IProps) => backgroundColor ?? theme.colors.white};
 `;

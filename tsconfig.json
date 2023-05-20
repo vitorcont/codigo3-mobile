@@ -11,11 +11,13 @@
     "allowSyntheticDefaultImports": true,
     "baseUrl": "./",
     "paths": {
-      "@mobile/*": [
-        "./src/*"
-      ]
+      "@mobile/*": ["./src/*"]
     },
     "plugins": [
+      {
+        "name": "@styled/typescript-styled-plugin",
+        "tags": ["styled", "css", "sty"]
+      },
       {
         "name": "typescript-styled-plugin",
         "lint": {
