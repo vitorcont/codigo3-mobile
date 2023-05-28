@@ -11,3 +11,7 @@ export const AUTH_LOGGED = 'AUTH_LOGGED';
 export const LOGOUT = 'LOGOUT';
 
 export const GET_TRACKING = 'GET_TRACKING';
+
+export const SET_PLACES_LIST = 'SET_PLACES_LIST';
+
+export const SET_USER_LOCATION = 'SET_USER_LOCATION';

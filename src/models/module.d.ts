@@ -26,3 +26,25 @@ export interface PolyArea {
   description?: string;
   coordinates: LatLng[];
 }
+
+export interface PlaceProperties {
+  address: string;
+  category: string;
+}
+
+export interface PlaceFound {
+  id: string;
+  type: string;
+  relevance: number;
+  text_pt: string;
+  text: string;
+  place_name_pt: string;
+  place_name: string;
+  properties: PlaceProperties;
+  center: number[];
+}
+
+export interface PlacesResponse {
+  type: string;
+  features: PlaceFound[];
+}

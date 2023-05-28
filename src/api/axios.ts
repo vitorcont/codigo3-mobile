@@ -1,4 +1,5 @@
 import Axios, { AxiosError, AxiosResponse } from 'axios';
+import { MAPBOX_TOKEN } from '@mobile/../env.json';
 
 export enum AxiosStatus {
   Unauthorized = 401,
@@ -47,12 +48,13 @@ export const getMapboxInstance = async () => {
   axiosInstance.interceptors.request.use((request) => {
     request.baseURL = 'https://api.mapbox.com/geocoding/v5/mapbox.places';
     request.params = {
-      proximity: '',
+      ...request.params,
       country: 'br',
-      limit: 10,
+      limit: 6,
       language: 'pt',
-      access_token: process.env.MAPBOX_TOKEN,
+      access_token: MAPBOX_TOKEN,
     };
+
     return request;
   });
 

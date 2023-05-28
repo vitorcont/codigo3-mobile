@@ -67,3 +67,26 @@ export const isPointInside = (point: LatLng, polyPoints: LatLng[]) => {
 
   return inside;
 };
+
+export const calculateDistance = (lat1: number, lon1: number, lat2: number, lon2: number) => {
+  const earthRadius = 6371; // Radius of the Earth in kilometers
+  const degToRad = Math.PI / 180; // Conversion factor from degrees to radians
+
+  // Convert latitude and longitude to radians
+  const latRad1 = lat1 * degToRad;
+  const lonRad1 = lon1 * degToRad;
+  const latRad2 = lat2 * degToRad;
+  const lonRad2 = lon2 * degToRad;
+
+  // Calculate the differences between coordinates
+  const latDiff = latRad2 - latRad1;
+  const lonDiff = lonRad2 - lonRad1;
+
+  // Calculate the distance using the Haversine formula
+  const a =
+    Math.sin(latDiff / 2) ** 2 + Math.cos(latRad1) * Math.cos(latRad2) * Math.sin(lonDiff / 2) ** 2;
+  const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+  const distance = earthRadius * c;
+
+  return distance;
+};

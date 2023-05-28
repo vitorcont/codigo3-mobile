@@ -5,8 +5,10 @@ const theme = {
     black: '#000',
     inputBackground: '#EEEEEE',
     inputBorder: '#CCCCCC',
-    placeholder: '#CCCCCC',
+    placeholder: '#B1B1B1',
     drawerIndicator: '#D6D6D6',
+    placeBorder: '#D6D6D6',
+    placeText: '#616161',
   },
   fonts: {
     light: 'Inter_300Light',

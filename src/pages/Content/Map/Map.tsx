@@ -12,19 +12,21 @@ import { route } from '@mobile/assets/mock/route';
 import { useReduxState } from '@mobile/hooks/useReduxState';
 import BottomSheet from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheet/BottomSheet';
 import GPSIcon from '@mobile/assets/icons/ic_gps.svg';
+import { searchPlace } from '@mobile/store/Places/action';
+import { useDispatch } from 'react-redux';
+import { setUserLocation } from '@mobile/store/User/action';
+import { setBottomModal } from '@mobile/store/Modal/action';
 
 const Map = () => {
-  const [userLocation, setUserLocation] = useState<LocationObjectCoords | null>(null);
   const [strokeWidth, setStrokeWidth] = useState(10);
-  const [riskStatus, setRiskStatus] = useState<models.PolyArea | null>(null);
+  const [firstSearch, setFirstSearch] = useState(false);
+  const {
+    modal,
+    user: { userLocation },
+  } = useReduxState();
+  const dispatch = useDispatch();
   const mapRef = useRef<MapView | null>(null);
   const modalRef = useRef<BottomSheet | null>(null);
-
-  const { modal } = useReduxState();
-  const [informationModal, setInformationModal] = useState({
-    information: false,
-    index: 0,
-  });
 
   const handleIconVisibility = (region: Region) => {
     if (strokeWidth !== 20 && region.longitudeDelta < 0.007) {
@@ -38,38 +40,48 @@ const Map = () => {
     }
   };
 
-  const setDeviceLocation = async () => {
-    const location = await getUserLocation();
-    if (location) setRiskStatus(verifyPointInsideAreas(location, mapPolygons));
-    setUserLocation(location);
+  const zoomTo = (coords: LocationObjectCoords) => {
+    if (mapRef.current) {
+      mapRef.current.animateCamera(
+        {
+          center: {
+            latitude: coords.latitude,
+            longitude: coords.longitude,
+          },
+          zoom: 16,
+        },
+        { duration: 500 }
+      );
+    }
   };
 
-  const zoomIn = (coord: LatLng) => {
-    // mapRef.current &&
-    //   mapRef.current.animateToRegion({
-    //     latitude: coord.latitude,
-    //     longitude: coord.longitude,
-    //     latitudeDelta: 0.04,
-    //     longitudeDelta: 0.04,
-    //   });
-    mapRef.current &&
+  const centerUserLocation = () => {
+    if (userLocation && mapRef.current) {
       mapRef.current.animateCamera(
         {
           heading: userLocation?.heading!,
           center: {
-            latitude: coord.latitude,
-            longitude: coord.longitude,
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
           },
           zoom: 18,
         },
         { duration: 500 }
       );
+    }
   };
 
-  const centerUserLocation = () => {
-    if (userLocation && mapRef.current) {
-      zoomIn(userLocation);
-    }
+  const handleCardPress = (lat: number, long: number) => {
+    dispatch(setBottomModal('close'));
+    zoomTo({
+      latitude: lat,
+      longitude: long,
+      accuracy: null,
+      altitude: null,
+      altitudeAccuracy: null,
+      heading: null,
+      speed: null,
+    });
   };
 
   useEffect(() => {
@@ -78,13 +90,7 @@ const Map = () => {
         const watchId = await watchPositionAsync(
           { accuracy: Accuracy.High, timeInterval: 500, distanceInterval: 5 },
           (position) => {
-            setUserLocation(position.coords);
-            console.log(
-              'Updated location:',
-              position.coords.latitude,
-              position.coords.longitude,
-              position
-            );
+            dispatch(setUserLocation(position.coords));
           }
         );
 
@@ -100,16 +106,25 @@ const Map = () => {
   }, []);
 
   useEffect(() => {
-    if (modal === 'close') {
-      modalRef.current?.snapToIndex(0);
-    }
-    if (modal === 'open') {
-      modalRef.current?.snapToIndex(1);
-    }
-    if (modal === 'hide') {
-      modalRef.current?.close();
+    if (modalRef) {
+      if (modal === 'close') {
+        modalRef.current?.snapToIndex(0);
+      }
+      if (modal === 'open') {
+        modalRef.current?.snapToIndex(1);
+      }
+      if (modal === 'hide') {
+        modalRef.current?.close();
+      }
     }
   }, [modal]);
+
+  useEffect(() => {
+    if (!firstSearch && userLocation) {
+      setFirstSearch(true);
+      dispatch(searchPlace('hospital', userLocation));
+    }
+  }, [userLocation]);
 
   return (
     <>
@@ -132,7 +147,7 @@ const Map = () => {
             <MapMarker
               coordinate={userLocation}
               backgroundColor={theme.colors.primary}
-              onPress={() => zoomIn(userLocation)}
+              onPress={() => centerUserLocation()}
               icon={
                 <Box
                   width="80px"
@@ -173,7 +188,7 @@ const Map = () => {
             </S.MapButton>
           </Box>
         </Row>
-        <MapBottomModal ref={modalRef} />
+        <MapBottomModal ref={modalRef} onCardPress={(lat, long) => handleCardPress(lat, long)} />
       </Box>
     </>
   );
