@@ -1,6 +1,8 @@
 export const ACTION_LOADING_START = 'LOADING_START';
 export const ACTION_LOADING_END = 'LOADING_END';
 
+export const SET_BOTTOM_MODAL = 'SET_BOTTOM_MODAL';
+
 export const CREATE_USER = 'CREATE_USER';
 export const USER_ME = 'USER_ME';
 export const USER_LOCATION = 'USER_LOCATION';

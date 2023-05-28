@@ -1,8 +1,10 @@
 import { loadingReducer } from './Loading/reducer';
 import { combineReducers } from 'redux';
+import modalReducer from './Modal/reducer';
 
 const reducers = combineReducers({
   loading: loadingReducer,
+  modal: modalReducer,
 });
 
 const rootReducer = (state: any, action: any) => {

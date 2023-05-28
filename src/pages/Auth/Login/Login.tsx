@@ -5,9 +5,20 @@ import { Box, Button, Input, StyledText } from '@mobile/components';
 import theme from '@mobile/theme';
 import { ScrollView, TouchableOpacity } from 'react-native';
 import * as S from './Login.styles';
-import { winHeight } from '@mobile/services/dimensions';
+import { requestForegroundPermissionsAsync } from 'expo-location';
 
 const Login = () => {
+  useEffect(() => {
+    const requestLocationPermission = async () => {
+      try {
+        await requestForegroundPermissionsAsync();
+      } catch (error) {
+        console.log('Error requesting location permission:', error);
+      }
+    };
+
+    requestLocationPermission();
+  }, []);
   const scrollRef = useRef<ScrollView>();
   return (
     <>
@@ -25,12 +36,14 @@ const Login = () => {
               </Box>
               <Input
                 boxProps={{
-                  marginTop: '12%',
+                  marginTop: '10%',
                 }}
                 inputProps={{
                   placeholder: 'e-mail',
                   onFocus: () => {
-                    scrollRef.current?.scrollToEnd();
+                    setTimeout(() => {
+                      scrollRef.current?.scrollToEnd();
+                    }, 100);
                   },
                 }}
               />
@@ -41,7 +54,9 @@ const Login = () => {
                 inputProps={{
                   placeholder: 'senha',
                   onFocus: () => {
-                    scrollRef.current?.scrollToEnd();
+                    setTimeout(() => {
+                      scrollRef.current?.scrollToEnd();
+                    }, 100);
                   },
                 }}
               />

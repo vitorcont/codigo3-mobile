@@ -8,7 +8,9 @@ export const getUserLocation = async () => {
       return null;
     }
 
-    let location = await Location.getCurrentPositionAsync({});
+    let location = await Location.getCurrentPositionAsync({
+      accuracy: 4,
+    });
 
     return location.coords;
   } catch (err) {

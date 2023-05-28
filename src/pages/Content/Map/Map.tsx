@@ -1,49 +1,32 @@
 import React, { useEffect, useMemo, useRef, useState } from 'react';
 import MapView, { LatLng, Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
-import { Linking, Text, View } from 'react-native';
-import { useDispatch } from 'react-redux';
-import { LocationObjectCoords } from 'expo-location';
-import { useLinkTo } from '@react-navigation/native';
-import {
-  AnimatedWarning,
-  Box,
-  Button,
-  Col,
-  MapBottomModal,
-  MapMarker,
-  MapStatusCard,
-  PolygonBuilder,
-  PureModal,
-  Row,
-  StatusCard,
-  StyledText,
-} from '@mobile/components';
+import { TouchableOpacity } from 'react-native';
+import { LocationObjectCoords, watchPositionAsync, Accuracy } from 'expo-location';
+import { Box, MapBottomModal, MapMarker, Row } from '@mobile/components';
 import * as S from './styles';
 import theme from '@mobile/theme';
-import { Feather, MaterialIcons, Ionicons } from '@expo/vector-icons';
-import {
-  getUserLocation,
-  isPointInside,
-  verifyAreaInsideAreas,
-  verifyPointInsideAreas,
-} from '@mobile/services/location';
-import WarningModal from '@mobile/components/modules/WarningModal/WarningModal';
+import { FontAwesome, AntDesign, Entypo, MaterialCommunityIcons } from '@expo/vector-icons';
+import { getUserLocation, verifyPointInsideAreas } from '@mobile/services/location';
 import { mapPolygons } from '@mobile/services/polyMocks';
-import { RiskStatusEnum } from '@mobile/enum/status';
 import { route } from '@mobile/assets/mock/route';
+import { useReduxState } from '@mobile/hooks/useReduxState';
+import BottomSheet from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheet/BottomSheet';
+import GPSIcon from '@mobile/assets/icons/ic_gps.svg';
 
 const Map = () => {
   const [userLocation, setUserLocation] = useState<LocationObjectCoords | null>(null);
   const [strokeWidth, setStrokeWidth] = useState(10);
   const [riskStatus, setRiskStatus] = useState<models.PolyArea | null>(null);
   const mapRef = useRef<MapView | null>(null);
+  const modalRef = useRef<BottomSheet | null>(null);
+
+  const { modal } = useReduxState();
   const [informationModal, setInformationModal] = useState({
     information: false,
     index: 0,
   });
 
   const handleIconVisibility = (region: Region) => {
-    console.log(strokeWidth, region.longitudeDelta, region.longitudeDelta > 0.06);
     if (strokeWidth !== 20 && region.longitudeDelta < 0.007) {
       setStrokeWidth(20);
     }
@@ -62,13 +45,25 @@ const Map = () => {
   };
 
   const zoomIn = (coord: LatLng) => {
+    // mapRef.current &&
+    //   mapRef.current.animateToRegion({
+    //     latitude: coord.latitude,
+    //     longitude: coord.longitude,
+    //     latitudeDelta: 0.04,
+    //     longitudeDelta: 0.04,
+    //   });
     mapRef.current &&
-      mapRef.current.animateToRegion({
-        latitude: coord.latitude,
-        longitude: coord.longitude,
-        latitudeDelta: 0.04,
-        longitudeDelta: 0.04,
-      });
+      mapRef.current.animateCamera(
+        {
+          heading: userLocation?.heading!,
+          center: {
+            latitude: coord.latitude,
+            longitude: coord.longitude,
+          },
+          zoom: 18,
+        },
+        { duration: 500 }
+      );
   };
 
   const centerUserLocation = () => {
@@ -78,14 +73,43 @@ const Map = () => {
   };
 
   useEffect(() => {
-    setDeviceLocation();
+    const watchLocation = async () => {
+      try {
+        const watchId = await watchPositionAsync(
+          { accuracy: Accuracy.High, timeInterval: 500, distanceInterval: 5 },
+          (position) => {
+            setUserLocation(position.coords);
+            console.log(
+              'Updated location:',
+              position.coords.latitude,
+              position.coords.longitude,
+              position
+            );
+          }
+        );
 
-    const timeout = setTimeout(() => {
-      setDeviceLocation();
-    }, 10000);
+        return () => {
+          watchId.remove();
+        };
+      } catch (error) {
+        console.log('Error watching location:', error);
+      }
+    };
 
-    return () => clearTimeout(timeout);
+    watchLocation();
   }, []);
+
+  useEffect(() => {
+    if (modal === 'close') {
+      modalRef.current?.snapToIndex(0);
+    }
+    if (modal === 'open') {
+      modalRef.current?.snapToIndex(1);
+    }
+    if (modal === 'hide') {
+      modalRef.current?.close();
+    }
+  }, [modal]);
 
   return (
     <>
@@ -109,33 +133,47 @@ const Map = () => {
               coordinate={userLocation}
               backgroundColor={theme.colors.primary}
               onPress={() => zoomIn(userLocation)}
-              icon={<MaterialIcons name="location-history" size={30} color={theme.colors.white} />}
+              icon={
+                <Box
+                  width="80px"
+                  height="80px"
+                  backgroundColor="blue"
+                  justifyContent="center"
+                  alignItems="center">
+                  <Box
+                    width="2px"
+                    height="2px"
+                    style={{ transform: [{ rotate: `${userLocation.heading}deg` }] }}>
+                    <GPSIcon />
+                  </Box>
+                </Box>
+              }
             />
           )}
-          <Polyline
-            coordinates={route.map((marker) => ({
-              latitude: marker[1],
-              longitude: marker[0],
-            }))}
-            strokeColor="#9000ff"
-            strokeWidth={strokeWidth}
-          />
         </S.Map>
         <Row
           position="absolute"
-          bottom="8%"
+          bottom="16%"
           justifyContent="space-between"
           alignSelf="center"
           alignItems="flex-end"
-          zIndex={100}
-          backgroundColor="red"
-          width="90%">
-          <Box alignItems="flex-end">
-            <Box marginBottom="15px">
-              <StyledText value="AA" />
-            </Box>
+          zIndex={5}
+          flexDirection="column"
+          right="5%">
+          <Box
+            marginTop="20px"
+            width="46px"
+            height="46px"
+            alignItems="center"
+            justifyContent="center"
+            backgroundColor={theme.colors.primary}
+            borderRadius="30px">
+            <S.MapButton onPress={() => centerUserLocation()}>
+              <MaterialCommunityIcons name="crosshairs-gps" size={30} color="white" />
+            </S.MapButton>
           </Box>
         </Row>
+        <MapBottomModal ref={modalRef} />
       </Box>
     </>
   );

@@ -14,18 +14,18 @@ const RawBottomModal = forwardRef<BottomSheet, RawBottomModalProps>((props, ref)
     <BottomSheet
       {...props}
       backgroundStyle={{
-        backgroundColor: theme.colors.secundary,
+        backgroundColor: theme.colors.white,
       }}
       handleIndicatorStyle={{
-        backgroundColor: theme.colors.white,
-        width: '20%',
+        backgroundColor: theme.colors.drawerIndicator,
+        width: '30%',
       }}
       ref={ref}
       index={0}>
       <BottomSheetScrollView
         style={{
           width: '100%',
-          marginTop: Window.heightScale(0.06),
+          marginTop: Window.heightScale(0.025),
         }}>
         <Box width="100%" pdBottom="10%">
           {props.children}

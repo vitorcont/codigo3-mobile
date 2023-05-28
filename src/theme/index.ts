@@ -6,6 +6,7 @@ const theme = {
     inputBackground: '#EEEEEE',
     inputBorder: '#CCCCCC',
     placeholder: '#CCCCCC',
+    drawerIndicator: '#D6D6D6',
   },
   fonts: {
     light: 'Inter_300Light',

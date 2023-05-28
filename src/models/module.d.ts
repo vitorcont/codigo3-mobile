@@ -2,6 +2,8 @@ import { RiskStatusEnum } from '@mobile/enum/status';
 import { LatLng } from 'react-native-maps';
 export as namespace models;
 
+export type BottomModalVisibility = 'hide' | 'close' | 'open';
+
 export interface Project {
   name: string;
 }

@@ -14,10 +14,15 @@ import { Feather, MaterialIcons, Ionicons, Entypo } from '@expo/vector-icons';
 import { openWebSite } from '@mobile/services/contacts';
 import { WebView } from 'react-native-webview';
 import { RiskStatusEnum } from '@mobile/enum/status';
+import { Input } from '@mobile/components/modules';
+import { useDispatch } from 'react-redux';
+import { setBottomModal } from '@mobile/store/Modal/action';
 
 export interface MapBottomModalProps {}
 
 const MapBottomModal = forwardRef<BottomSheet, MapBottomModalProps>((props, ref) => {
+  const dispatch = useDispatch();
+
   const cardsData = [
     {
       status: RiskStatusEnum.SAFE,
@@ -40,14 +45,26 @@ const MapBottomModal = forwardRef<BottomSheet, MapBottomModalProps>((props, ref)
   ];
 
   return (
-    <RawBottomModal {...props} ref={ref} snapPoints={['6%', '80%']}>
+    <RawBottomModal
+      {...props}
+      ref={ref}
+      onChange={(index) => {
+        dispatch(setBottomModal(index ? 'open' : 'close'));
+      }}
+      snapPoints={['14%', '80%']}>
       <Box width="90%" alignSelf="center" alignItems="center">
-        <StyledText
-          fontFamily={theme.fonts.bold}
-          fontSize={18}
-          value="Em caso de emegência, entre em contato"
+        <Input
+          boxProps={{
+            width: '94%',
+          }}
+          inputProps={{
+            placeholder: 'e-mail',
+            onFocus: () => {
+              dispatch(setBottomModal('open'));
+            },
+          }}
         />
-        <Box marginVertical="20px">
+        <Box marginVertical="20px" marginTop="20%">
           <Button
             StartAdornment={<Feather name="phone" size={18} color={theme.colors.white} />}
             label="Discar 199"
