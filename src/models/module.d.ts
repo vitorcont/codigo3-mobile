@@ -1,3 +1,4 @@
+import { LocationObjectCoords } from 'expo-location';
 import { RiskStatusEnum } from '@mobile/enum/status';
 import { LatLng } from 'react-native-maps';
 export as namespace models;
@@ -47,4 +48,16 @@ export interface PlaceFound {
 export interface PlacesResponse {
   type: string;
   features: PlaceFound[];
+}
+
+export interface PlaceMarker extends LocationObjectCoords {
+  id: string;
+  type: string;
+  relevance: number;
+  text_pt: string;
+  text: string;
+  place_name_pt: string;
+  place_name: string;
+  properties: PlaceProperties;
+  center: number[];
 }

@@ -16,17 +16,23 @@ import { searchPlace } from '@mobile/store/Places/action';
 import { useDispatch } from 'react-redux';
 import { setUserLocation } from '@mobile/store/User/action';
 import { setBottomModal } from '@mobile/store/Modal/action';
+import { PlaceFound } from '@mobile/models/module';
+import CardsList from '@mobile/components/modules/CardsList/CardsList';
 
 const Map = () => {
   const [strokeWidth, setStrokeWidth] = useState(10);
   const [firstSearch, setFirstSearch] = useState(false);
   const {
     modal,
+    places: { placesList },
     user: { userLocation },
   } = useReduxState();
   const dispatch = useDispatch();
   const mapRef = useRef<MapView | null>(null);
   const modalRef = useRef<BottomSheet | null>(null);
+  const [searchText, setSearchText] = useState('');
+  const [showList, setShowList] = useState(false);
+  const [markers, setMarkers] = useState<models.PlaceMarker[]>([]);
 
   const handleIconVisibility = (region: Region) => {
     if (strokeWidth !== 20 && region.longitudeDelta < 0.007) {
@@ -71,11 +77,54 @@ const Map = () => {
     }
   };
 
-  const handleCardPress = (lat: number, long: number) => {
-    dispatch(setBottomModal('close'));
+  const handleCardPress = (placeClicked: PlaceFound) => {
+    dispatch(setBottomModal('hide'));
+    const location = {
+      ...placeClicked,
+      latitude: placeClicked.center[1],
+      longitude: placeClicked.center[0],
+      accuracy: null,
+      altitude: null,
+      altitudeAccuracy: null,
+      heading: null,
+      speed: null,
+    };
+    setMarkers(
+      placesList.features.map((place) => ({
+        ...place,
+        latitude: place.center[1],
+        longitude: place.center[0],
+        accuracy: null,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      }))
+    );
+
+    zoomTo(location);
+  };
+
+  const handleOnSearch = () => {
+    dispatch(setBottomModal('hide'));
+    setShowList(true);
+    setMarkers(
+      placesList.features.map((place) => ({
+        ...place,
+        latitude: place.center[1],
+        longitude: place.center[0],
+        accuracy: null,
+        altitude: null,
+        altitudeAccuracy: null,
+        heading: null,
+        speed: null,
+      }))
+    );
+
     zoomTo({
-      latitude: lat,
-      longitude: long,
+      ...placesList.features[0],
+      latitude: placesList.features[0].center[1],
+      longitude: placesList.features[0].center[0],
       accuracy: null,
       altitude: null,
       altitudeAccuracy: null,
@@ -165,30 +214,89 @@ const Map = () => {
               }
             />
           )}
+          {!!markers.length &&
+            markers.map((marker) => (
+              <Marker
+                coordinate={marker}
+                onPress={() => {
+                  zoomTo(marker);
+                }}></Marker>
+            ))}
         </S.Map>
-        <Row
-          position="absolute"
-          bottom="16%"
-          justifyContent="space-between"
-          alignSelf="center"
-          alignItems="flex-end"
-          zIndex={5}
-          flexDirection="column"
-          right="5%">
-          <Box
-            marginTop="20px"
-            width="46px"
-            height="46px"
-            alignItems="center"
-            justifyContent="center"
-            backgroundColor={theme.colors.primary}
-            borderRadius="30px">
-            <S.MapButton onPress={() => centerUserLocation()}>
-              <MaterialCommunityIcons name="crosshairs-gps" size={30} color="white" />
-            </S.MapButton>
-          </Box>
-        </Row>
-        <MapBottomModal ref={modalRef} onCardPress={(lat, long) => handleCardPress(lat, long)} />
+        {!!markers.length && (
+          <Row
+            position="absolute"
+            top="6%"
+            justifyContent="space-between"
+            alignSelf="center"
+            alignItems="flex-end"
+            zIndex={5}
+            flexDirection="column"
+            right="5%">
+            <Box
+              marginTop="20px"
+              width="46px"
+              height="46px"
+              alignItems="center"
+              justifyContent="center"
+              backgroundColor={theme.colors.primary}
+              borderRadius="30px">
+              <S.MapButton
+                onPress={() => {
+                  setMarkers([]);
+                  dispatch(setBottomModal('close'));
+                  setShowList(false);
+                  setSearchText('');
+                }}>
+                <MaterialCommunityIcons name="close" size={30} color="white" />
+              </S.MapButton>
+            </Box>
+          </Row>
+        )}
+
+        <MapBottomModal
+          ref={modalRef}
+          searchText={searchText}
+          setSearchText={setSearchText}
+          onCardPress={(place) => handleCardPress(place)}
+          onSearch={handleOnSearch}
+        />
+
+        {!showList && (
+          <Row
+            position="absolute"
+            bottom="16%"
+            justifyContent="space-between"
+            alignSelf="center"
+            alignItems="flex-end"
+            zIndex={2}
+            flexDirection="column"
+            right="5%">
+            <Box
+              marginTop="20px"
+              width="46px"
+              height="46px"
+              alignItems="center"
+              justifyContent="center"
+              backgroundColor={theme.colors.primary}
+              borderRadius="30px">
+              <S.MapButton onPress={() => centerUserLocation()}>
+                <MaterialCommunityIcons name="crosshairs-gps" size={30} color="white" />
+              </S.MapButton>
+            </Box>
+          </Row>
+        )}
+        {showList && (
+          <Row
+            position="absolute"
+            bottom="0px"
+            alignSelf="center"
+            alignItems="flex-end"
+            zIndex={2}
+            width="100%">
+            <CardsList data={placesList.features} onCardPress={() => {}} zoomTo={zoomTo} />
+          </Row>
+        )}
       </Box>
     </>
   );

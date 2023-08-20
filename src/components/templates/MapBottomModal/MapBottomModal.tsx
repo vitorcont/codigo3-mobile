@@ -12,13 +12,17 @@ import Window from '@mobile/services/dimensions';
 import { calculateDistance } from '@mobile/services/location';
 import { LocationObjectCoords } from 'expo-location';
 import { searchPlace } from '@mobile/store/Places/action';
+import { PlaceFound } from '@mobile/models/module';
+import { FontAwesome } from '@expo/vector-icons';
 
 export interface MapBottomModalProps {
-  onCardPress: (lat: number, long: number) => void;
+  onCardPress: (place: PlaceFound) => void;
+  searchText: string;
+  setSearchText: (value: string) => void;
+  onSearch: () => void;
 }
 
 const MapBottomModal = forwardRef<BottomSheet, MapBottomModalProps>((props, ref) => {
-  const [searchText, setSearchText] = useState('');
   const [blockSearch, setBlockSearch] = useState(false);
   const dispatch = useDispatch();
   const {
@@ -33,14 +37,16 @@ const MapBottomModal = forwardRef<BottomSheet, MapBottomModalProps>((props, ref)
       setBlockSearch(true);
       setTimeout(() => {
         setBlockSearch(false);
-        dispatch(searchPlace(searchText.length ? searchText : 'hospital', userLocation!));
+        dispatch(
+          searchPlace(props.searchText.length ? props.searchText : 'hospital', userLocation!)
+        );
       }, 1500);
     }
-  }, [searchText]);
+  }, [props.searchText]);
 
   useEffect(() => {
     if (!blockSearch) {
-      dispatch(searchPlace(searchText.length ? searchText : 'hospital', userLocation!));
+      dispatch(searchPlace(props.searchText.length ? props.searchText : 'hospital', userLocation!));
     }
   }, [blockSearch]);
 
@@ -49,7 +55,15 @@ const MapBottomModal = forwardRef<BottomSheet, MapBottomModalProps>((props, ref)
       {...props}
       ref={ref}
       onChange={(index) => {
-        dispatch(setBottomModal(index ? 'open' : 'close'));
+        if (index === 0) {
+          dispatch(setBottomModal('close'));
+        }
+        if (index === 1) {
+          dispatch(setBottomModal('open'));
+        }
+      }}
+      style={{
+        zIndex: 100,
       }}
       snapPoints={['14%', '85%']}>
       <Box width="100%" alignSelf="center" alignItems="center">
@@ -60,15 +74,20 @@ const MapBottomModal = forwardRef<BottomSheet, MapBottomModalProps>((props, ref)
           }}
           inputProps={{
             placeholder: 'Pesquisar...',
-            value: searchText,
+            value: props.searchText,
             onChangeText: (value) => {
               onSearchText(value);
-              setSearchText(value);
+              props.setSearchText(value);
             },
             onFocus: () => {
               dispatch(setBottomModal('open'));
             },
           }}
+          EndAdornment={
+            <S.SearchButton onPress={() => props.onSearch()}>
+              <FontAwesome name="search" size={18} color="white" />
+            </S.SearchButton>
+          }
         />
       </Box>
       <BottomSheetScrollView
@@ -79,7 +98,7 @@ const MapBottomModal = forwardRef<BottomSheet, MapBottomModalProps>((props, ref)
         <Box width="100%" pdBottom="10%">
           <Box alignItems="center">
             {placesList.features.map((place) => (
-              <S.PlaceCard onPress={() => props.onCardPress(place.center[1], place.center[0])}>
+              <S.PlaceCard onPress={() => props.onCardPress(place)}>
                 <Box flexDirection="row" pdVertical="18px" pdHorizontal="14px" alignItems="center">
                   <Box width="10%">
                     <FontAwesome5 name="map-marker-alt" size={32} color={theme.colors.primary} />
