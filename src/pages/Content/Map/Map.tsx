@@ -63,7 +63,6 @@ const Map = () => {
   };
 
   const centerUserLocation = () => {
-    console.log('Location:', userLocation);
     if (userLocation && mapRef.current) {
       mapRef.current.animateCamera(
         {

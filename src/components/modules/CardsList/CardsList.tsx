@@ -18,15 +18,8 @@ export interface CardsListProps {
 
 const CardsList = (props: CardsListProps) => {
   const {
-    places: { placesList },
     user: { userLocation },
   } = useReduxState();
-  const onViewableItemsChanged = useCallback(
-    (props: { viewableItems: ViewToken[]; changed: ViewToken[] }) => {
-      console.log(props.changed);
-    },
-    []
-  );
 
   return (
     <FlatList
