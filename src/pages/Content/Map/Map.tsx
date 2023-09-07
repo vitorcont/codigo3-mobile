@@ -2,17 +2,11 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import MapView, { LatLng, Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { TouchableOpacity } from 'react-native';
 import { LocationObjectCoords, watchPositionAsync, Accuracy } from 'expo-location';
-import { Box, MapBottomModal, MapMarker, Row, StyledText } from '@mobile/components';
+import { Box, Button, MapBottomModal, MapMarker, Row, StyledText } from '@mobile/components';
 import * as S from './styles';
 import theme from '@mobile/theme';
-import { FontAwesome, AntDesign, Entypo, MaterialCommunityIcons } from '@expo/vector-icons';
-import {
-  calculateDistance,
-  getUserLocation,
-  verifyPointInsideAreas,
-} from '@mobile/services/location';
-import { mapPolygons } from '@mobile/services/polyMocks';
-import { route } from '@mobile/assets/mock/route';
+import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import { calculateDistance } from '@mobile/services/location';
 import { useReduxState } from '@mobile/hooks/useReduxState';
 import BottomSheet from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheet/BottomSheet';
 import GPSIcon from '@mobile/assets/icons/ic_gps.svg';
@@ -22,6 +16,7 @@ import { setUserLocation } from '@mobile/store/User/action';
 import { setBottomModal } from '@mobile/store/Modal/action';
 import { PlaceFound } from '@mobile/models/module';
 import CardsList from '@mobile/components/modules/CardsList/CardsList';
+import PlaceDetails from '@mobile/components/modules/PlaceDetails/PlaceDetails';
 
 const Map = () => {
   const [strokeWidth, setStrokeWidth] = useState(10);
@@ -68,13 +63,14 @@ const Map = () => {
   };
 
   const centerUserLocation = () => {
+    console.log('Location:', userLocation);
     if (userLocation && mapRef.current) {
       mapRef.current.animateCamera(
         {
           heading: userLocation?.heading!,
           center: {
-            latitude: userLocation.latitude,
-            longitude: userLocation.longitude,
+            latitude: userLocation?.latitude ?? 0,
+            longitude: userLocation?.longitude ?? 0,
           },
           zoom: 18,
         },
@@ -184,59 +180,68 @@ const Map = () => {
   return (
     <>
       <Box flex={1}>
-        <>
-          <S.Map
-            showsTraffic
-            showsCompass
-            showsScale
-            showsMyLocationButton
-            initialRegion={{
-              latitude: -16.255448,
-              longitude: -47.150932,
-              latitudeDelta: 40,
-              longitudeDelta: 40,
-            }}
-            onRegionChange={handleIconVisibility}
-            ref={mapRef}
-            provider={PROVIDER_GOOGLE}>
-            {!!userLocation && (
-              <MapMarker
-                coordinate={userLocation}
-                backgroundColor={theme.colors.primary}
-                onPress={() => centerUserLocation()}
-                icon={
+        <S.Map
+          showsTraffic
+          showsCompass
+          showsScale
+          showsMyLocationButton
+          initialRegion={{
+            latitude: -16.255448,
+            longitude: -47.150932,
+            latitudeDelta: 40,
+            longitudeDelta: 40,
+          }}
+          onRegionChange={handleIconVisibility}
+          ref={mapRef}
+          provider={PROVIDER_GOOGLE}>
+          {!!userLocation && (
+            <MapMarker
+              coordinate={userLocation}
+              backgroundColor={theme.colors.primary}
+              onPress={() => centerUserLocation()}
+              icon={
+                <Box
+                  width="80px"
+                  height="80px"
+                  backgroundColor="blue"
+                  justifyContent="center"
+                  alignItems="center">
                   <Box
-                    width="80px"
-                    height="80px"
-                    backgroundColor="blue"
-                    justifyContent="center"
-                    alignItems="center">
-                    <Box
-                      width="2px"
-                      height="2px"
-                      style={{ transform: [{ rotate: `${userLocation.heading}deg` }] }}>
-                      <GPSIcon />
-                    </Box>
+                    width="2px"
+                    height="2px"
+                    style={{ transform: [{ rotate: `${userLocation.heading}deg` }] }}>
+                    <GPSIcon />
                   </Box>
-                }
-              />
-            )}
-            {!!markers.length &&
-              markers.map((marker) => (
-                <Marker
-                  coordinate={marker}
-                  onPress={() => {
-                    zoomTo(marker);
-                  }}></Marker>
-              ))}
-          </S.Map>
-          <MapBottomModal
-            ref={modalRef}
-            searchText={searchText}
-            setSearchText={setSearchText}
-            onCardPress={(place) => handleCardPress(place)}
-            onSearch={handleOnSearch}
-          />
+                </Box>
+              }
+            />
+          )}
+          {!!markers.length &&
+            markers.map((marker) => (
+              <Marker
+                coordinate={marker}
+                onPress={() => {
+                  zoomTo(marker);
+                }}></Marker>
+            ))}
+        </S.Map>
+        <Box position="absolute" height="100%" width="100%" justifyContent="flex-end">
+          {!showList && !showDetails && (
+            <Row alignSelf="flex-end" alignItems="flex-end" right="2%" bottom="40%">
+              <Box
+                marginTop="20px"
+                width="46px"
+                height="46px"
+                alignItems="center"
+                justifyContent="center"
+                backgroundColor={theme.colors.primary}
+                borderRadius="30px">
+                <S.MapButton onPress={() => centerUserLocation()}>
+                  <MaterialCommunityIcons name="crosshairs-gps" size={30} color="white" />
+                </S.MapButton>
+              </Box>
+            </Row>
+          )}
           {!!markers.length && (
             <Row
               position="absolute"
@@ -263,31 +268,6 @@ const Map = () => {
               )}
             </Row>
           )}
-          {console.log(showList, showDetails)}
-          {!showList && !showDetails && (
-            <Row
-              position="absolute"
-              bottom="16%"
-              justifyContent="space-between"
-              alignSelf="center"
-              alignItems="flex-end"
-              zIndex={2}
-              flexDirection="column"
-              right="5%">
-              <Box
-                marginTop="20px"
-                width="46px"
-                height="46px"
-                alignItems="center"
-                justifyContent="center"
-                backgroundColor={theme.colors.primary}
-                borderRadius="30px">
-                <S.MapButton onPress={() => centerUserLocation()}>
-                  <MaterialCommunityIcons name="crosshairs-gps" size={30} color="white" />
-                </S.MapButton>
-              </Box>
-            </Row>
-          )}
           {showList && (
             <Row
               position="absolute"
@@ -310,75 +290,20 @@ const Map = () => {
             </Row>
           )}
           {showDetails && placePressed && (
-            <Row
-              position="absolute"
-              bottom="0px"
-              justifyContent="space-between"
-              alignSelf="center"
-              alignItems="flex-end"
-              zIndex={2}
-              width="100%"
-              flexDirection="column">
-              <Box
-                pdHorizontal="28px"
-                borderRadius="10px"
-                width="100%"
-                shadowBox
-                pdVertical="20px"
-                pdBottom="30px"
-                marginBottom="-15px"
-                flexDirection="column"
-                backgroundColor={theme.colors.white}>
-                <Box
-                  flex={1}
-                  alignItems="center"
-                  flexDirection="row"
-                  justifyContent="space-between">
-                  <StyledText
-                    value="Americana, SP"
-                    fontSize={18}
-                    fontFamily={theme.fonts.semiBold}
-                    color={theme.colors.placeText}
-                  />
-                  <Box
-                    width="34px"
-                    height="34px"
-                    alignItems="center"
-                    justifyContent="center"
-                    backgroundColor={theme.colors.primary}
-                    borderRadius="30px">
-                    <S.MapButton onPress={handleClose}>
-                      <MaterialCommunityIcons name="close" size={26} color="white" />
-                    </S.MapButton>
-                  </Box>
-                </Box>
-                <Box width="75%">
-                  <StyledText
-                    value={
-                      placePressed.place_name.includes(`${placePressed.text}, `)
-                        ? placePressed.place_name.split(`${placePressed.text}, `)[1]
-                        : placePressed.place_name
-                    }
-                    color={theme.colors.placeText}
-                  />
-                </Box>
-                <Box>
-                  <StyledText
-                    value={`${calculateDistance(
-                      userLocation?.latitude!,
-                      userLocation?.longitude!,
-                      placePressed.center[1],
-                      placePressed.center[0]
-                    ).toFixed(1)} KM`}
-                    fontSize={18}
-                    textAlign="center"
-                    color={theme.colors.placeText}
-                  />
-                </Box>
-              </Box>
-            </Row>
+            <PlaceDetails
+              handleClose={handleClose}
+              placePressed={placePressed}
+              userLocation={userLocation}
+            />
           )}
-        </>
+        </Box>
+        <MapBottomModal
+          ref={modalRef}
+          searchText={searchText}
+          setSearchText={setSearchText}
+          onCardPress={(place) => handleCardPress(place)}
+          onSearch={handleOnSearch}
+        />
       </Box>
     </>
   );
