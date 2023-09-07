@@ -2,11 +2,19 @@ import React, { useEffect, useMemo, useRef, useState } from 'react';
 import MapView, { LatLng, Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { TouchableOpacity } from 'react-native';
 import { LocationObjectCoords, watchPositionAsync, Accuracy } from 'expo-location';
-import { Box, Button, MapBottomModal, MapMarker, Row, StyledText } from '@mobile/components';
+import {
+  Box,
+  Button,
+  CodeModal,
+  MapBottomModal,
+  MapMarker,
+  PureModal,
+  Row,
+  StyledText,
+} from '@mobile/components';
 import * as S from './styles';
 import theme from '@mobile/theme';
-import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
-import { calculateDistance } from '@mobile/services/location';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useReduxState } from '@mobile/hooks/useReduxState';
 import BottomSheet from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheet/BottomSheet';
 import GPSIcon from '@mobile/assets/icons/ic_gps.svg';
@@ -31,6 +39,7 @@ const Map = () => {
   const modalRef = useRef<BottomSheet | null>(null);
   const [searchText, setSearchText] = useState('');
   const [showList, setShowList] = useState(false);
+  const [priorityModal, setPriorityModal] = useState(false);
   const [placePressed, setPlacePressed] = useState<null | PlaceFound>(null);
   const [markers, setMarkers] = useState<models.PlaceMarker[]>([]);
   const [showDetails, setShowDetails] = useState(false);
@@ -134,6 +143,8 @@ const Map = () => {
     });
   };
 
+  const handleOnStart = () => {};
+
   useEffect(() => {
     const watchLocation = async () => {
       try {
@@ -178,6 +189,11 @@ const Map = () => {
 
   return (
     <>
+      <CodeModal
+        setVisible={setPriorityModal}
+        visible={priorityModal}
+        onSelectPriority={() => {}}
+      />
       <Box flex={1}>
         <S.Map
           showsTraffic
@@ -293,6 +309,7 @@ const Map = () => {
               handleClose={handleClose}
               placePressed={placePressed}
               userLocation={userLocation}
+              onStart={() => setPriorityModal(true)}
             />
           )}
         </Box>

@@ -9,6 +9,9 @@ const theme = {
     drawerIndicator: '#D6D6D6',
     placeBorder: '#D6D6D6',
     placeText: '#616161',
+    codeOne: '#276B07',
+    codeTwo: '#CCAB00',
+    codeThree: '#9E0606',
   },
   fonts: {
     light: 'Inter_300Light',

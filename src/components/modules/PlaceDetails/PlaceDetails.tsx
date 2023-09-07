@@ -10,9 +10,10 @@ interface IPlaceDetails {
   placePressed: models.PlaceFound;
   handleClose: () => void;
   userLocation: LocationObjectCoords | null;
+  onStart: () => void;
 }
 
-const PlaceDetails = ({ handleClose, placePressed, userLocation }: IPlaceDetails) => {
+const PlaceDetails = ({ handleClose, placePressed, userLocation, onStart }: IPlaceDetails) => {
   return (
     <Row
       position="absolute"
@@ -76,6 +77,7 @@ const PlaceDetails = ({ handleClose, placePressed, userLocation }: IPlaceDetails
           />
           <Button
             label="Iniciar"
+            onPress={onStart}
             StartAdornment={<FontAwesome5 name="play" size={12} color="white" />}
           />
         </Box>

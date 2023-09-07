@@ -64,7 +64,6 @@ const MapBottomModal = forwardRef<BottomSheet, MapBottomModalProps>((props, ref)
       }}
       style={{
         zIndex: 100,
-        backgroundColor: 'red',
         elevation: 10,
       }}
       snapPoints={['14%', '85%']}>
