@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useRef, useState } from 'react';
+import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
 import MapView, { LatLng, Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { TouchableOpacity } from 'react-native';
 import { LocationObjectCoords, watchPositionAsync, Accuracy } from 'expo-location';
@@ -10,7 +10,6 @@ import {
   MapMarker,
   PureModal,
   Row,
-  StyledText,
 } from '@mobile/components';
 import * as S from './styles';
 import theme from '@mobile/theme';
@@ -25,6 +24,7 @@ import { setBottomModal } from '@mobile/store/Modal/action';
 import { PlaceFound } from '@mobile/models/module';
 import CardsList from '@mobile/components/modules/CardsList/CardsList';
 import PlaceDetails from '@mobile/components/modules/PlaceDetails/PlaceDetails';
+import { SocketContext } from '@mobile/context/SocketContext';
 
 const Map = () => {
   const [strokeWidth, setStrokeWidth] = useState(10);
@@ -43,6 +43,7 @@ const Map = () => {
   const [placePressed, setPlacePressed] = useState<null | PlaceFound>(null);
   const [markers, setMarkers] = useState<models.PlaceMarker[]>([]);
   const [showDetails, setShowDetails] = useState(false);
+  const socketContext = useContext(SocketContext)!;
 
   const handleIconVisibility = (region: Region) => {
     if (strokeWidth !== 20 && region.longitudeDelta < 0.007) {
@@ -143,7 +144,16 @@ const Map = () => {
     });
   };
 
-  const handleOnStart = () => {};
+  const handleOnStart = () => {
+    socketContext.createSocket().emit('registerUser', { userId: 1 });
+  };
+
+  const emitLocation = () => {
+    setTimeout(() => {
+      socketContext!.socket!.emit('updateLocation', userLocation);
+      emitLocation();
+    }, 1000);
+  };
 
   useEffect(() => {
     const watchLocation = async () => {
@@ -187,12 +197,19 @@ const Map = () => {
     }
   }, [userLocation]);
 
+  useEffect(() => {
+    console.log(socketContext.socket?.connected);
+    if (socketContext.socket && socketContext.socket.connected) {
+      emitLocation();
+    }
+  }, [socketContext.socket?.connected]);
+
   return (
     <>
       <CodeModal
         setVisible={setPriorityModal}
         visible={priorityModal}
-        onSelectPriority={() => {}}
+        onSelectPriority={() => handleOnStart()}
       />
       <Box flex={1}>
         <S.Map

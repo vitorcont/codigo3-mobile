@@ -49,6 +49,7 @@ const CodeModal = (props: ICodeModal) => {
             {priority.map((item, index) => (
               <Box marginTop="20px" width="80%">
                 <Button
+                  onPress={() => props.onSelectPriority((index + 1) as any)}
                   StartAdornment={<Feather name="circle" size={20} color="white" />}
                   label={`Código ${index + 1}`}
                   backgroundColor={item.color}

@@ -4,14 +4,17 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { navigationRef } from '@mobile/services/navigation';
 import FlashMessage from 'react-native-flash-message';
 import RootNavigationStack from './pages/RootNavigationStack';
+import { SocketProvider } from './context/SocketContext';
 
 const AppContent = () => {
   return (
     <SafeAreaProvider>
-      <FlashMessage position="top" />
-      <NavigationContainer ref={navigationRef}>
-        <RootNavigationStack />
-      </NavigationContainer>
+      <SocketProvider>
+        <FlashMessage position="top" />
+        <NavigationContainer ref={navigationRef}>
+          <RootNavigationStack />
+        </NavigationContainer>
+      </SocketProvider>
     </SafeAreaProvider>
   );
 };

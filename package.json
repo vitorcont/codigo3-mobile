@@ -52,6 +52,7 @@
     "react-redux": "^7.2.8",
     "redux": "^4.1.2",
     "redux-thunk": "^2.4.1",
+    "socket.io-client": "^4.7.2",
     "styled-components": "^5.3.6",
     "vanilla-masker": "^1.2.0"
   },
