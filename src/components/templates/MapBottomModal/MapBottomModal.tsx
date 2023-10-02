@@ -1,7 +1,7 @@
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Box, RawBottomModal, StyledText } from '@mobile/components/elements';
 import theme from '@mobile/theme';
-import React, { forwardRef, useEffect, useState } from 'react';
+import React, { forwardRef, useContext, useEffect, useRef, useState } from 'react';
 import { Feather, MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
 import { Input } from '@mobile/components/modules';
 import { useDispatch } from 'react-redux';
@@ -10,50 +10,61 @@ import { useReduxState } from '@mobile/hooks/useReduxState';
 import * as S from './MapBottomModal.style';
 import Window from '@mobile/services/dimensions';
 import { calculateDistance } from '@mobile/services/location';
-import { LocationObjectCoords } from 'expo-location';
 import { searchPlace } from '@mobile/store/Places/action';
 import { PlaceFound } from '@mobile/models/module';
 import { FontAwesome } from '@expo/vector-icons';
+import { SearchContext } from '@mobile/context/SearchContext';
 
 export interface MapBottomModalProps {
   onCardPress: (place: PlaceFound) => void;
-  searchText: string;
-  setSearchText: (value: string) => void;
   onSearch: () => void;
 }
 
-const MapBottomModal = forwardRef<BottomSheet, MapBottomModalProps>((props, ref) => {
+const MapBottomModal = (props: MapBottomModalProps) => {
   const [blockSearch, setBlockSearch] = useState(false);
+  const modalRef = useRef<BottomSheet | null>(null);
   const dispatch = useDispatch();
   const {
     places: { placesList },
     user: { userLocation },
+    modal,
   } = useReduxState();
-
-  const onSearchText = (value: string) => {};
+  const { searchText, setSearchText } = useContext(SearchContext)!;
 
   useEffect(() => {
     if (!blockSearch) {
       setBlockSearch(true);
       setTimeout(() => {
         setBlockSearch(false);
-        dispatch(
-          searchPlace(props.searchText.length ? props.searchText : 'hospital', userLocation!)
-        );
+        dispatch(searchPlace(searchText.length ? searchText : 'hospital', userLocation!));
       }, 1500);
     }
-  }, [props.searchText]);
+  }, [searchText]);
 
   useEffect(() => {
     if (!blockSearch) {
-      dispatch(searchPlace(props.searchText.length ? props.searchText : 'hospital', userLocation!));
+      dispatch(searchPlace(searchText.length ? searchText : 'hospital', userLocation!));
     }
   }, [blockSearch]);
+
+  useEffect(() => {
+    if (modalRef) {
+      if (modal === 'close') {
+        modalRef.current?.snapToIndex(0);
+      }
+      if (modal === 'open') {
+        modalRef.current?.snapToIndex(1);
+      }
+      if (modal === 'hide') {
+        modalRef.current?.close();
+      }
+    }
+  }, [modal]);
 
   return (
     <RawBottomModal
       {...props}
-      ref={ref}
+      ref={modalRef}
       onChange={(index) => {
         if (index === 0) {
           dispatch(setBottomModal('close'));
@@ -75,10 +86,9 @@ const MapBottomModal = forwardRef<BottomSheet, MapBottomModalProps>((props, ref)
           }}
           inputProps={{
             placeholder: 'Pesquisar...',
-            value: props.searchText,
+            value: searchText,
             onChangeText: (value) => {
-              onSearchText(value);
-              props.setSearchText(value);
+              setSearchText(value);
             },
             onFocus: () => {
               dispatch(setBottomModal('open'));
@@ -147,6 +157,6 @@ const MapBottomModal = forwardRef<BottomSheet, MapBottomModalProps>((props, ref)
       </BottomSheetScrollView>
     </RawBottomModal>
   );
-});
+};
 
 export default MapBottomModal;

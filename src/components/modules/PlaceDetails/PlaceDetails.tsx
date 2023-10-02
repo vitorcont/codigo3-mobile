@@ -2,18 +2,21 @@ import { Row, Box, StyledText, Button } from '@mobile/components/elements';
 import { calculateDistance } from '@mobile/services/location';
 import theme from '@mobile/theme';
 import { LocationObjectCoords } from 'expo-location';
-import React from 'react';
+import React, { useContext } from 'react';
 import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as S from './styles';
+import { useReduxState } from '@mobile/hooks/useReduxState';
+import { SearchContext } from '@mobile/context/SearchContext';
 
 interface IPlaceDetails {
-  placePressed: models.PlaceFound;
-  handleClose: () => void;
-  userLocation: LocationObjectCoords | null;
   onStart: () => void;
 }
 
-const PlaceDetails = ({ handleClose, placePressed, userLocation, onStart }: IPlaceDetails) => {
+const PlaceDetails = ({ onStart }: IPlaceDetails) => {
+  const { placePressed, handleClose } = useContext(SearchContext)!;
+  const {
+    user: { userLocation },
+  } = useReduxState();
   return (
     <Row
       position="absolute"
@@ -36,7 +39,7 @@ const PlaceDetails = ({ handleClose, placePressed, userLocation, onStart }: IPla
         backgroundColor={theme.colors.white}>
         <Box flex={1} alignItems="center" flexDirection="row" justifyContent="space-between">
           <StyledText
-            value={placePressed.text}
+            value={placePressed!.text}
             fontSize={18}
             fontFamily={theme.fonts.semiBold}
             color={theme.colors.placeText}
@@ -56,9 +59,9 @@ const PlaceDetails = ({ handleClose, placePressed, userLocation, onStart }: IPla
         <Box width="75%">
           <StyledText
             value={
-              placePressed.place_name.includes(`${placePressed.text}, `)
-                ? placePressed.place_name.split(`${placePressed.text}, `)[1]
-                : placePressed.place_name
+              placePressed!.place_name.includes(`${placePressed!.text}, `)
+                ? placePressed!.place_name.split(`${placePressed!.text}, `)[1]
+                : placePressed!.place_name
             }
             color={theme.colors.placeText}
           />
@@ -68,8 +71,8 @@ const PlaceDetails = ({ handleClose, placePressed, userLocation, onStart }: IPla
             value={`${calculateDistance(
               userLocation?.latitude!,
               userLocation?.longitude!,
-              placePressed.center[1],
-              placePressed.center[0]
+              placePressed!.center[1],
+              placePressed!.center[0]
             ).toFixed(1)} KM`}
             fontFamily={theme.fonts.semiBold}
             fontSize={18}

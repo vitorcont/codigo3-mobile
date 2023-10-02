@@ -9,12 +9,10 @@ import { SocketProvider } from './context/SocketContext';
 const AppContent = () => {
   return (
     <SafeAreaProvider>
-      <SocketProvider>
-        <FlashMessage position="top" />
-        <NavigationContainer ref={navigationRef}>
-          <RootNavigationStack />
-        </NavigationContainer>
-      </SocketProvider>
+      <FlashMessage position="top" />
+      <NavigationContainer ref={navigationRef}>
+        <RootNavigationStack />
+      </NavigationContainer>
     </SafeAreaProvider>
   );
 };
