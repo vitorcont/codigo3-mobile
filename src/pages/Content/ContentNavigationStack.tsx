@@ -9,19 +9,19 @@ const ContentNavigationStack = () => {
   const ContentStack = createStack();
 
   return (
-    <ContentStack.Navigator
-      initialRouteName="Map"
-      screenOptions={{
-        headerShown: false,
-      }}>
-      <SocketProvider>
-        <LocationProvider>
-          <SearchProvider>
+    <SocketProvider>
+      <LocationProvider>
+        <SearchProvider>
+          <ContentStack.Navigator
+            initialRouteName="Map"
+            screenOptions={{
+              headerShown: false,
+            }}>
             <ContentStack.Screen name="Map" component={Map} />
-          </SearchProvider>
-        </LocationProvider>
-      </SocketProvider>
-    </ContentStack.Navigator>
+          </ContentStack.Navigator>
+        </SearchProvider>
+      </LocationProvider>
+    </SocketProvider>
   );
 };
 

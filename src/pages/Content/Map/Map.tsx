@@ -1,25 +1,13 @@
-import React, { useContext, useEffect, useMemo, useRef, useState } from 'react';
-import MapView, { LatLng, Marker, Polyline, PROVIDER_GOOGLE, Region } from 'react-native-maps';
-import { TouchableOpacity } from 'react-native';
-import { LocationObjectCoords, watchPositionAsync, Accuracy } from 'expo-location';
-import {
-  Box,
-  Button,
-  CodeModal,
-  MapBottomModal,
-  MapMarker,
-  PureModal,
-  Row,
-} from '@mobile/components';
+import React, { useContext, useRef, useState } from 'react';
+import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import { LocationObjectCoords } from 'expo-location';
+import { Box, CodeModal, MapBottomModal, MapMarker, Row } from '@mobile/components';
 import * as S from './styles';
 import theme from '@mobile/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { useReduxState } from '@mobile/hooks/useReduxState';
-import BottomSheet from '@gorhom/bottom-sheet/lib/typescript/components/bottomSheet/BottomSheet';
 import GPSIcon from '@mobile/assets/icons/ic_gps.svg';
-import { searchPlace } from '@mobile/store/Places/action';
 import { useDispatch } from 'react-redux';
-import { setUserLocation } from '@mobile/store/User/action';
 import { setBottomModal } from '@mobile/store/Modal/action';
 import { PlaceFound } from '@mobile/models/module';
 import CardsList from '@mobile/components/modules/CardsList/CardsList';
@@ -86,7 +74,8 @@ const Map = () => {
             latitude: userLocation?.latitude ?? 0,
             longitude: userLocation?.longitude ?? 0,
           },
-          zoom: 18,
+          zoom: 28,
+          pitch: 90,
         },
         { duration: 500 }
       );
@@ -145,13 +134,12 @@ const Map = () => {
       <CodeModal
         setVisible={setPriorityModal}
         visible={priorityModal}
-        onSelectPriority={() => socketContext.socketStartTrip(userLocation!, placePressed!)}
+        onSelectPriority={(code) => socketContext.socketStartTrip(placePressed!, code)}
       />
       <Box flex={1}>
         <S.Map
           showsTraffic
-          showsCompass
-          showsScale
+          pitchEnabled
           showsMyLocationButton
           initialRegion={{
             latitude: -16.255448,

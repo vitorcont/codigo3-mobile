@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState } from 'react';
+import { createContext, useEffect, useMemo, useState } from 'react';
 import io, { Socket } from 'socket.io-client';
 import { API_URL } from '@mobile/../env.json';
 import { PlaceFound } from '@mobile/models/module';
@@ -9,12 +9,39 @@ interface ISocketProvider {
   children: React.ReactNode;
 }
 
+interface ILocation {
+  latitute: number;
+  longitude: number;
+  priority?: number;
+}
+
+interface ISearchRoute {
+  origin: ILocation;
+  destination: ILocation;
+  priority: number;
+}
+
+interface IUpdateLocation {
+  latitute: number;
+  longitude: number;
+  priority: number;
+}
+
+interface IUserIndividual {
+  origin: ILocation | null;
+  destination: ILocation | null;
+  currentLocation: ILocation | null;
+  startedAt: Date | null;
+  priority: number;
+}
+
 export interface SocketState {
   socketConnect: () => Socket;
   socket: Socket | null;
   socketRegisterUser: () => void;
-  socketEmitLocation: (userLocation: LocationObjectCoords) => void;
-  socketStartTrip: (userLocation: LocationObjectCoords, placePressed: PlaceFound) => void;
+  socketEndTrip: () => void;
+  socketEmitLocation: () => void;
+  socketStartTrip: (placePressed: PlaceFound, priority: number) => void;
 }
 
 export const SocketContext = createContext<SocketState | null>(null);
@@ -38,18 +65,32 @@ export const SocketProvider = (props: ISocketProvider) => {
     socketState!.emit('registerUser', { userId: 1 });
   };
 
-  const socketStartTrip = (userLocation: LocationObjectCoords, placePressed: PlaceFound) => {
+  const socketStartTrip = (placePressed: PlaceFound, priority: number) => {
     socketState!.emit('startTrip', {
-      origin: userLocation,
-      destination: placePressed,
-    });
+      origin: {
+        latitute: userLocation!.latitude,
+        longitude: userLocation!.longitude,
+      },
+      destination: {
+        latitute: placePressed.center[1],
+        longitude: placePressed.center[0],
+      },
+      priority: priority,
+    } as ISearchRoute);
   };
 
-  const socketEmitLocation = (userLocation: LocationObjectCoords) => {
+  const socketEmitLocation = () => {
     setTimeout(() => {
-      socketState!.emit('updateLocation', userLocation);
-      socketEmitLocation(userLocation);
+      socketState!.emit('updateLocation', {
+        latitute: userLocation!.latitude,
+        longitude: userLocation!.longitude,
+      } as IUpdateLocation);
+      socketEmitLocation();
     }, 1000);
+  };
+
+  const socketEndTrip = () => {
+    socketState!.emit('endTrip', {});
   };
 
   useEffect(() => {
@@ -58,17 +99,21 @@ export const SocketProvider = (props: ISocketProvider) => {
 
   useEffect(() => {
     if (socketState && socketState.connected) {
-      socketEmitLocation(userLocation!);
+      socketEmitLocation();
     }
   }, [socketState?.connected]);
 
-  const values = {
-    socketConnect,
-    socket: socketState,
-    socketRegisterUser,
-    socketStartTrip,
-    socketEmitLocation,
-  };
+  const values = useMemo(
+    () => ({
+      socketConnect,
+      socket: socketState,
+      socketRegisterUser,
+      socketStartTrip,
+      socketEmitLocation,
+      socketEndTrip,
+    }),
+    [socketState]
+  );
 
   return <SocketContext.Provider value={values}>{props.children}</SocketContext.Provider>;
 };

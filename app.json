@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "App Emergência",
-    "slug": "emergency-mobile",
+    "slug": "code3-mobile",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/img_icon.png",
@@ -30,6 +30,12 @@
     },
     "web": {
       "favicon": "./assets/images/img_favicon.png"
-    }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "98ae36db-b963-486f-a519-ff494cfb03ca"
+      }
+    },
+    "owner": "vitor-181"
   }
 }
