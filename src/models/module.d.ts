@@ -61,3 +61,29 @@ export interface PlaceMarker extends LocationObjectCoords {
   properties: PlaceProperties;
   center: number[];
 }
+
+export interface ILocation {
+  latitute: number;
+  longitude: number;
+  priority?: number;
+}
+
+export interface ISearchRoute {
+  origin: ILocation;
+  destination: ILocation;
+  priority: number;
+}
+
+export interface IUpdateLocation {
+  latitute: number;
+  longitude: number;
+  priority: number;
+}
+
+export interface IUserIndividual {
+  origin: ILocation | null;
+  destination: ILocation | null;
+  currentLocation: ILocation | null;
+  startedAt: Date | null;
+  priority: number;
+}

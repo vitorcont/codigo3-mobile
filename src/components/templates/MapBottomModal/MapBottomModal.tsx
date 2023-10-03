@@ -32,7 +32,7 @@ const MapBottomModal = (props: MapBottomModalProps) => {
   const { searchText, setSearchText } = useContext(SearchContext)!;
 
   useEffect(() => {
-    if (!blockSearch) {
+    if (!blockSearch && userLocation) {
       setBlockSearch(true);
       setTimeout(() => {
         setBlockSearch(false);
@@ -42,8 +42,9 @@ const MapBottomModal = (props: MapBottomModalProps) => {
   }, [searchText]);
 
   useEffect(() => {
-    if (!blockSearch) {
-      dispatch(searchPlace(searchText.length ? searchText : 'hospital', userLocation!));
+    if (!blockSearch && userLocation) {
+      console.log('MODAL - BLOCK');
+      dispatch(searchPlace(searchText.length ? searchText : 'hospital', userLocation));
     }
   }, [blockSearch]);
 

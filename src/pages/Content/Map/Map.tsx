@@ -1,7 +1,15 @@
 import React, { useContext, useRef, useState } from 'react';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { LocationObjectCoords } from 'expo-location';
-import { Box, CodeModal, MapBottomModal, MapMarker, Row } from '@mobile/components';
+import {
+  Box,
+  CodeModal,
+  MapBottomModal,
+  MapMarker,
+  PathBuilder,
+  PolylineBuilder,
+  Row,
+} from '@mobile/components';
 import * as S from './styles';
 import theme from '@mobile/theme';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -14,12 +22,13 @@ import CardsList from '@mobile/components/modules/CardsList/CardsList';
 import PlaceDetails from '@mobile/components/modules/PlaceDetails/PlaceDetails';
 import { SocketContext } from '@mobile/context/SocketContext';
 import { SearchContext } from '@mobile/context/SearchContext';
+import PolygonBuilder from '@mobile/components/modules/PolygonBuilder/PolygonBuilder';
 
 const Map = () => {
   const [strokeWidth, setStrokeWidth] = useState(10);
   const [priorityModal, setPriorityModal] = useState(false);
   const {
-    places: { placesList },
+    places: { placesList, activeRoute },
     user: { userLocation },
   } = useReduxState();
   const socketContext = useContext(SocketContext)!;
@@ -74,8 +83,25 @@ const Map = () => {
             latitude: userLocation?.latitude ?? 0,
             longitude: userLocation?.longitude ?? 0,
           },
-          zoom: 28,
-          pitch: 90,
+          zoom: 16,
+          pitch: 0,
+        },
+        { duration: 500 }
+      );
+    }
+  };
+
+  const centerNavigation = () => {
+    if (userLocation && mapRef.current) {
+      mapRef.current.animateCamera(
+        {
+          heading: userLocation?.heading!,
+          center: {
+            latitude: userLocation?.latitude ?? 0,
+            longitude: userLocation?.longitude ?? 0,
+          },
+          zoom: 21,
+          pitch: 84,
         },
         { duration: 500 }
       );
@@ -134,13 +160,18 @@ const Map = () => {
       <CodeModal
         setVisible={setPriorityModal}
         visible={priorityModal}
-        onSelectPriority={(code) => socketContext.socketStartTrip(placePressed!, code)}
+        onSelectPriority={(code) => {
+          setPriorityModal(false);
+          socketContext.socketStartTrip(placePressed!, code, userLocation!);
+          centerNavigation();
+        }}
       />
       <Box flex={1}>
         <S.Map
           showsTraffic
           pitchEnabled
           showsMyLocationButton
+          followsUserLocation={true}
           initialRegion={{
             latitude: -16.255448,
             longitude: -47.150932,
@@ -180,6 +211,7 @@ const Map = () => {
                   zoomTo(marker);
                 }}></Marker>
             ))}
+          {!!activeRoute && <PathBuilder path={activeRoute} />}
         </S.Map>
         <Box position="absolute" height="100%" width="100%" justifyContent="flex-end">
           {!showList && !showDetails && (

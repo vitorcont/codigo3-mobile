@@ -8,3 +8,4 @@ export { default as AnimatedWarning } from './AnimatedWarning/AnimatedWarning';
 export { default as RawBottomModal } from './RawBottomModal/RawBottomModal';
 export { default as MapMarker } from './MapMarker/MapMarker';
 export { default as PureModal } from './PureModal/PureModal';
+export { default as PolylineBuilder } from './PolylineBuilder/PolylineBuilder';

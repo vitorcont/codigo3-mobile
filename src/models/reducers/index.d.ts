@@ -5,6 +5,7 @@ export as namespace reducers;
 
 export interface SearchState {
   placesList: PlacesResponse;
+  activeRoute: mapbox.MapboxglRouteList | null;
 }
 
 export interface UserState {

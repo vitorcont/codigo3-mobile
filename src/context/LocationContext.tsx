@@ -20,7 +20,10 @@ export const LocationProvider = (props: ILocationProvider) => {
         const watchId = await watchPositionAsync(
           { accuracy: Accuracy.High, timeInterval: 500, distanceInterval: 5 },
           (position) => {
-            dispatch(setUserLocation(position.coords));
+            console.log('AAAAAA', position);
+            if (position) {
+              dispatch(setUserLocation(position.coords));
+            }
           }
         );
 

@@ -1,3 +1,4 @@
+import { SET_ACTIVE_ROUTE } from './../actionsType';
 import { getMapboxInstance } from '@mobile/api/axios';
 import { calculateDistance } from '@mobile/services/location';
 import { LocationObjectCoords } from 'expo-location';
@@ -7,6 +8,7 @@ import { SET_PLACES_LIST } from '../actionsType';
 export const searchPlace =
   (searchText: string, userLocation: LocationObjectCoords) => async (dispatch: Dispatch) => {
     try {
+      console.log('DENTRO', userLocation);
       const geocodingInstance = await getMapboxInstance();
       const { data }: { data: models.PlacesResponse } = await geocodingInstance.get(
         `${searchText}.json`,
@@ -42,3 +44,10 @@ export const searchPlace =
       console.log('ERRO', err);
     }
   };
+
+export const setActiveRoute = (data: mapbox.MapboxglRouteList) => async (dispatch: Dispatch) => {
+  dispatch({
+    type: SET_ACTIVE_ROUTE,
+    payload: data,
+  });
+};

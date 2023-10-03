@@ -9,8 +9,8 @@ const ContentNavigationStack = () => {
   const ContentStack = createStack();
 
   return (
-    <SocketProvider>
-      <LocationProvider>
+    <LocationProvider>
+      <SocketProvider>
         <SearchProvider>
           <ContentStack.Navigator
             initialRouteName="Map"
@@ -20,8 +20,8 @@ const ContentNavigationStack = () => {
             <ContentStack.Screen name="Map" component={Map} />
           </ContentStack.Navigator>
         </SearchProvider>
-      </LocationProvider>
-    </SocketProvider>
+      </SocketProvider>
+    </LocationProvider>
   );
 };
 
