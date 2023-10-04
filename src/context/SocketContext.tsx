@@ -1,6 +1,6 @@
 import { createContext, useEffect, useMemo, useState } from 'react';
 import io, { Socket } from 'socket.io-client';
-import { API_URL } from '@mobile/../env.json';
+import { USER_API_URL } from '@mobile/../env.json';
 import { PlaceFound } from '@mobile/models/module';
 import { useReduxState } from '@mobile/hooks/useReduxState';
 import { LocationObjectCoords } from 'expo-location';
@@ -25,13 +25,13 @@ export const SocketContext = createContext<SocketState | null>(null);
 export const SocketProvider = (props: ISocketProvider) => {
   const [socketState, setSocketState] = useState<Socket | null>(null);
   const {
-    user: { userLocation },
+    user: { userLocation, userData },
   } = useReduxState();
   const dispatch = useDispatch();
 
   const socketConnect = () => {
     console.log('CONECTOU');
-    const socket = io(`${API_URL}/navigation-socket`, {
+    const socket = io(`http://192.168.0.142:3010/navigation-socket`, {
       transports: ['websocket'],
     });
     setSocketState(socket);
@@ -49,7 +49,7 @@ export const SocketProvider = (props: ISocketProvider) => {
 
   const socketRegisterUser = () => {
     try {
-      socketState!.emit('registerUser', { userId: 1 });
+      socketState!.emit('registerUser', { userId: userData!.id ?? 1 });
       socketEmitLocation();
     } catch (err) {
       console.log(err);
@@ -65,11 +65,11 @@ export const SocketProvider = (props: ISocketProvider) => {
   ) => {
     socketState!.emit('startTrip', {
       origin: {
-        latitute: user.latitude,
+        latitude: user.latitude,
         longitude: user.longitude,
       },
       destination: {
-        latitute: placePressed.center[1],
+        latitude: placePressed.center[1],
         longitude: placePressed.center[0],
       },
       priority: priority,
@@ -79,11 +79,10 @@ export const SocketProvider = (props: ISocketProvider) => {
   const socketEmitLocation = () => {
     try {
       socketState!.emit('updateLocation', {
-        latitute: userLocation!.latitude,
+        latitude: userLocation!.latitude,
         longitude: userLocation!.longitude,
       } as models.IUpdateLocation);
     } catch (err) {
-      console.log('A');
       socketRegisterUser();
     }
   };

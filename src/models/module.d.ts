@@ -63,7 +63,7 @@ export interface PlaceMarker extends LocationObjectCoords {
 }
 
 export interface ILocation {
-  latitute: number;
+  latitude: number;
   longitude: number;
   priority?: number;
 }
@@ -75,7 +75,7 @@ export interface ISearchRoute {
 }
 
 export interface IUpdateLocation {
-  latitute: number;
+  latitude: number;
   longitude: number;
   priority: number;
 }
@@ -86,4 +86,16 @@ export interface IUserIndividual {
   currentLocation: ILocation | null;
   startedAt: Date | null;
   priority: number;
+}
+
+export interface IUser {
+  id: string;
+  name: string;
+  email: string;
+  password?: string;
+}
+
+export interface IUserAuth {
+  email: string;
+  password: string;
 }

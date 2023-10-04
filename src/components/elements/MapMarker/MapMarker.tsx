@@ -7,11 +7,15 @@ export interface MapMarkerProps {
   icon?: React.ReactNode;
   backgroundColor?: string;
   onPress?: () => void;
+  bearing?: number;
 }
 
 const MapMarker = (props: MapMarkerProps) => {
   return (
-    <Marker coordinate={props.coordinate} onPress={props.onPress}>
+    <Marker
+      coordinate={props.coordinate}
+      onPress={props.onPress}
+      style={{ transform: [{ rotate: `${props.bearing}deg` }] }}>
       <Button backgroundColor={props.backgroundColor} StartAdornment={props.icon} />
     </Marker>
   );

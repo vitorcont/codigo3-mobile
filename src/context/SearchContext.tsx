@@ -52,7 +52,6 @@ export const SearchProvider = (props: ISearchProvider) => {
 
   useEffect(() => {
     if (!firstSearch && userLocation) {
-      console.log('AQUI', userLocation);
       setFirstSearch(true);
       dispatch(searchPlace('hospital', userLocation));
     }

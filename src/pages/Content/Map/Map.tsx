@@ -1,4 +1,4 @@
-import React, { useContext, useRef, useState } from 'react';
+import React, { useContext, useEffect, useRef, useState } from 'react';
 import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
 import { LocationObjectCoords } from 'expo-location';
 import {
@@ -23,6 +23,7 @@ import PlaceDetails from '@mobile/components/modules/PlaceDetails/PlaceDetails';
 import { SocketContext } from '@mobile/context/SocketContext';
 import { SearchContext } from '@mobile/context/SearchContext';
 import PolygonBuilder from '@mobile/components/modules/PolygonBuilder/PolygonBuilder';
+import { setActiveRoute } from '@mobile/store/Places/action';
 
 const Map = () => {
   const [strokeWidth, setStrokeWidth] = useState(10);
@@ -100,10 +101,10 @@ const Map = () => {
             latitude: userLocation?.latitude ?? 0,
             longitude: userLocation?.longitude ?? 0,
           },
-          zoom: 21,
-          pitch: 84,
+          zoom: 20,
+          pitch: 56,
         },
-        { duration: 500 }
+        { duration: 1000 }
       );
     }
   };
@@ -155,6 +156,18 @@ const Map = () => {
     });
   };
 
+  const handleEndTrip = () => {
+    dispatch(setActiveRoute(null));
+    socketContext.socketEndTrip();
+    centerUserLocation();
+  };
+
+  useEffect(() => {
+    if (activeRoute) {
+      centerNavigation();
+    }
+  }, [userLocation]);
+
   return (
     <>
       <CodeModal
@@ -186,6 +199,7 @@ const Map = () => {
               coordinate={userLocation}
               backgroundColor={theme.colors.primary}
               onPress={() => centerUserLocation()}
+              bearing={userLocation.heading ?? 0}
               icon={
                 <Box
                   width="80px"
@@ -196,7 +210,8 @@ const Map = () => {
                   <Box
                     width="2px"
                     height="2px"
-                    style={{ transform: [{ rotate: `${userLocation.heading}deg` }] }}>
+                    // style={{ transform: [{ rotate: `${userLocation.heading}deg` }] }}
+                  >
                     <GPSIcon />
                   </Box>
                 </Box>
@@ -254,6 +269,30 @@ const Map = () => {
                   </S.MapButton>
                 </Box>
               )}
+            </Row>
+          )}
+          {!!activeRoute && (
+            <Row
+              position="absolute"
+              top="6%"
+              justifyContent="space-between"
+              alignSelf="center"
+              alignItems="flex-end"
+              zIndex={5}
+              flexDirection="column"
+              right="5%">
+              <Box
+                marginTop="20px"
+                width="46px"
+                height="46px"
+                alignItems="center"
+                justifyContent="center"
+                backgroundColor={theme.colors.primary}
+                borderRadius="30px">
+                <S.MapButton onPress={handleEndTrip}>
+                  <MaterialCommunityIcons name="close" size={30} color="white" />
+                </S.MapButton>
+              </Box>
             </Row>
           )}
           {showList && (

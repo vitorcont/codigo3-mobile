@@ -18,9 +18,8 @@ export const LocationProvider = (props: ILocationProvider) => {
     const watchLocation = async () => {
       try {
         const watchId = await watchPositionAsync(
-          { accuracy: Accuracy.High, timeInterval: 500, distanceInterval: 5 },
+          { accuracy: Accuracy.BestForNavigation, timeInterval: 500, distanceInterval: 1 },
           (position) => {
-            console.log('AAAAAA', position);
             if (position) {
               dispatch(setUserLocation(position.coords));
             }

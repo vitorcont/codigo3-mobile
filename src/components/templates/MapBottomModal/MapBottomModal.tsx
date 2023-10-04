@@ -43,7 +43,6 @@ const MapBottomModal = (props: MapBottomModalProps) => {
 
   useEffect(() => {
     if (!blockSearch && userLocation) {
-      console.log('MODAL - BLOCK');
       dispatch(searchPlace(searchText.length ? searchText : 'hospital', userLocation));
     }
   }, [blockSearch]);

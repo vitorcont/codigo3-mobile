@@ -8,7 +8,6 @@ import { SET_PLACES_LIST } from '../actionsType';
 export const searchPlace =
   (searchText: string, userLocation: LocationObjectCoords) => async (dispatch: Dispatch) => {
     try {
-      console.log('DENTRO', userLocation);
       const geocodingInstance = await getMapboxInstance();
       const { data }: { data: models.PlacesResponse } = await geocodingInstance.get(
         `${searchText}.json`,
@@ -41,13 +40,14 @@ export const searchPlace =
         payload: sortedPlaces,
       });
     } catch (err) {
-      console.log('ERRO', err);
+      console.log('searchPlace_error', err);
     }
   };
 
-export const setActiveRoute = (data: mapbox.MapboxglRouteList) => async (dispatch: Dispatch) => {
-  dispatch({
-    type: SET_ACTIVE_ROUTE,
-    payload: data,
-  });
-};
+export const setActiveRoute =
+  (data: mapbox.MapboxglRouteList | null) => async (dispatch: Dispatch) => {
+    dispatch({
+      type: SET_ACTIVE_ROUTE,
+      payload: data,
+    });
+  };

@@ -7,7 +7,6 @@ export interface PolylineBuilderProps {
 }
 
 const PolylineBuilder = (props: PolylineBuilderProps) => {
-  console.log(props.path);
   const treatedPath: LatLng[] = useMemo(
     () =>
       props.path.routes[0].geometry.coordinates.map((value) => ({

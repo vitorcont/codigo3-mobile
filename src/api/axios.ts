@@ -1,5 +1,6 @@
 import Axios, { AxiosError, AxiosResponse } from 'axios';
-import { MAPBOX_TOKEN } from '@mobile/../env.json';
+import { MAPBOX_TOKEN, USER_API_URL } from '@mobile/../env.json';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 
 export enum AxiosStatus {
   Unauthorized = 401,
@@ -14,7 +15,14 @@ const handler: IHandler = {
   unauthorizedError: () => {},
 };
 
-const axiosInstance = Axios.create({
+const userServiceInstance = Axios.create({
+  timeout: 10000,
+  headers: {
+    'content-Type': 'application/json',
+  },
+});
+
+const mapBoxInstance = Axios.create({
   timeout: 10000,
   headers: {
     'content-Type': 'application/json',
@@ -22,15 +30,21 @@ const axiosInstance = Axios.create({
 });
 
 export const getApiInstance = async () => {
-  axiosInstance.interceptors.request.use((request) => {
-    request.baseURL = 'localhost';
+  const token = await AsyncStorage.getItem('accessToken');
+
+  userServiceInstance.interceptors.request.use((request) => {
+    request.baseURL = USER_API_URL;
+    if (token && request.headers) {
+      request.headers.authorization = `Bearer ${token}`;
+    }
     return request;
   });
 
-  axiosInstance.interceptors.response.use(
+  userServiceInstance.interceptors.response.use(
     (response: AxiosResponse) => response,
     async (err: AxiosError) => {
-      console.log(err);
+      console.log('axios_error', JSON.stringify(err));
+
       if (err.response?.status === AxiosStatus.Unauthorized) {
         handler.unauthorizedError();
       } else if (err.response?.status === AxiosStatus.Forbidden) {
@@ -41,11 +55,11 @@ export const getApiInstance = async () => {
     }
   );
 
-  return axiosInstance;
+  return userServiceInstance;
 };
 
 export const getMapboxInstance = async () => {
-  axiosInstance.interceptors.request.use((request) => {
+  mapBoxInstance.interceptors.request.use((request) => {
     request.baseURL = 'https://api.mapbox.com/geocoding/v5/mapbox.places';
     request.params = {
       ...request.params,
@@ -58,10 +72,13 @@ export const getMapboxInstance = async () => {
     return request;
   });
 
-  axiosInstance.interceptors.response.use(
-    (response: AxiosResponse) => response,
+  mapBoxInstance.interceptors.response.use(
+    (response: AxiosResponse) => {
+      return response;
+    },
     async (err: AxiosError) => {
-      console.log(err);
+      console.log('mapbox_error', JSON.stringify(err));
+
       if (err.response?.status === AxiosStatus.Unauthorized) {
         handler.unauthorizedError();
       } else if (err.response?.status === AxiosStatus.Forbidden) {
@@ -72,7 +89,7 @@ export const getMapboxInstance = async () => {
     }
   );
 
-  return axiosInstance;
+  return mapBoxInstance;
 };
 
 export const setHandleUnauthorizedError = (fn: () => void) => {
