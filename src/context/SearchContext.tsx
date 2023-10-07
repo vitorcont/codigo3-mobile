@@ -1,11 +1,9 @@
-import { createContext, useEffect, useState } from 'react';
-import { Accuracy, watchPositionAsync } from 'expo-location';
-import { setUserLocation } from '@mobile/store/User/action';
+import { createContext, useContext, useEffect, useState } from 'react';
 import { useDispatch } from 'react-redux';
 import { PlaceFound } from '@mobile/models/module';
-import { useReduxState } from '@mobile/hooks/useReduxState';
 import { searchPlace } from '@mobile/store/Places/action';
 import { setBottomModal } from '@mobile/store/Modal/action';
+import { LocationContext } from './LocationContext';
 
 interface ISearchProvider {
   children: React.ReactNode;
@@ -30,9 +28,7 @@ export interface ISearchContext {
 export const SearchContext = createContext<ISearchContext | null>(null);
 
 export const SearchProvider = (props: ISearchProvider) => {
-  const {
-    user: { userLocation },
-  } = useReduxState();
+  const { userLocation } = useContext(LocationContext)!;
   const [firstSearch, setFirstSearch] = useState(false);
   const [searchText, setSearchText] = useState('');
   const [showList, setShowList] = useState(false);

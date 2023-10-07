@@ -1,3 +1,5 @@
+import MapView from 'react-native-maps';
+import React from 'react';
 import styled from 'styled-components/native';
 
 export const MapButton = styled.TouchableOpacity`

@@ -7,6 +7,7 @@ import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
 import * as S from './styles';
 import { useReduxState } from '@mobile/hooks/useReduxState';
 import { SearchContext } from '@mobile/context/SearchContext';
+import { LocationContext } from '@mobile/context/LocationContext';
 
 interface IPlaceDetails {
   onStart: () => void;
@@ -14,9 +15,8 @@ interface IPlaceDetails {
 
 const PlaceDetails = ({ onStart }: IPlaceDetails) => {
   const { placePressed, handleClose } = useContext(SearchContext)!;
-  const {
-    user: { userLocation },
-  } = useReduxState();
+  const { userLocation } = useContext(LocationContext)!;
+
   return (
     <Row
       position="absolute"

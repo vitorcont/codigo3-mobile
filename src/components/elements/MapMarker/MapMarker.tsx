@@ -12,10 +12,7 @@ export interface MapMarkerProps {
 
 const MapMarker = (props: MapMarkerProps) => {
   return (
-    <Marker
-      coordinate={props.coordinate}
-      onPress={props.onPress}
-      style={{ transform: [{ rotate: `${props.bearing}deg` }] }}>
+    <Marker coordinate={props.coordinate} onPress={props.onPress}>
       <Button backgroundColor={props.backgroundColor} StartAdornment={props.icon} />
     </Marker>
   );

@@ -4,10 +4,11 @@ import { LocationObjectCoords } from 'expo-location';
 import {
   Box,
   CodeModal,
+  Directions,
+  EndTripModal,
   MapBottomModal,
   MapMarker,
   PathBuilder,
-  PolylineBuilder,
   Row,
 } from '@mobile/components';
 import * as S from './styles';
@@ -24,14 +25,17 @@ import { SocketContext } from '@mobile/context/SocketContext';
 import { SearchContext } from '@mobile/context/SearchContext';
 import PolygonBuilder from '@mobile/components/modules/PolygonBuilder/PolygonBuilder';
 import { setActiveRoute } from '@mobile/store/Places/action';
+import { LocationContext } from '@mobile/context/LocationContext';
 
 const Map = () => {
   const [strokeWidth, setStrokeWidth] = useState(10);
   const [priorityModal, setPriorityModal] = useState(false);
+  const [endTrip, setEndTrip] = useState(false);
+
   const {
     places: { placesList, activeRoute },
-    user: { userLocation },
   } = useReduxState();
+  const { userLocation } = useContext(LocationContext)!;
   const socketContext = useContext(SocketContext)!;
   const {
     handleClose,
@@ -104,7 +108,7 @@ const Map = () => {
           zoom: 20,
           pitch: 56,
         },
-        { duration: 1000 }
+        { duration: 2000 }
       );
     }
   };
@@ -156,9 +160,16 @@ const Map = () => {
     });
   };
 
+  const handleStartTrip = (code: number) => {
+    setPriorityModal(false);
+    socketContext.socketStartTrip(placePressed!, code);
+    centerNavigation();
+  };
+
   const handleEndTrip = () => {
     dispatch(setActiveRoute(null));
     socketContext.socketEndTrip();
+    setEndTrip(false);
     centerUserLocation();
   };
 
@@ -174,9 +185,14 @@ const Map = () => {
         setVisible={setPriorityModal}
         visible={priorityModal}
         onSelectPriority={(code) => {
-          setPriorityModal(false);
-          socketContext.socketStartTrip(placePressed!, code, userLocation!);
-          centerNavigation();
+          handleStartTrip(code);
+        }}
+      />
+      <EndTripModal
+        setVisible={setEndTrip}
+        visible={endTrip}
+        onAccept={() => {
+          handleEndTrip();
         }}
       />
       <Box flex={1}>
@@ -199,7 +215,6 @@ const Map = () => {
               coordinate={userLocation}
               backgroundColor={theme.colors.primary}
               onPress={() => centerUserLocation()}
-              bearing={userLocation.heading ?? 0}
               icon={
                 <Box
                   width="80px"
@@ -207,11 +222,7 @@ const Map = () => {
                   backgroundColor="blue"
                   justifyContent="center"
                   alignItems="center">
-                  <Box
-                    width="2px"
-                    height="2px"
-                    // style={{ transform: [{ rotate: `${userLocation.heading}deg` }] }}
-                  >
+                  <Box width="2px" height="2px">
                     <GPSIcon />
                   </Box>
                 </Box>
@@ -271,30 +282,6 @@ const Map = () => {
               )}
             </Row>
           )}
-          {!!activeRoute && (
-            <Row
-              position="absolute"
-              top="6%"
-              justifyContent="space-between"
-              alignSelf="center"
-              alignItems="flex-end"
-              zIndex={5}
-              flexDirection="column"
-              right="5%">
-              <Box
-                marginTop="20px"
-                width="46px"
-                height="46px"
-                alignItems="center"
-                justifyContent="center"
-                backgroundColor={theme.colors.primary}
-                borderRadius="30px">
-                <S.MapButton onPress={handleEndTrip}>
-                  <MaterialCommunityIcons name="close" size={30} color="white" />
-                </S.MapButton>
-              </Box>
-            </Row>
-          )}
           {showList && (
             <Row
               position="absolute"
@@ -316,7 +303,10 @@ const Map = () => {
               />
             </Row>
           )}
-          {showDetails && placePressed && <PlaceDetails onStart={() => setPriorityModal(true)} />}
+          {!activeRoute && showDetails && placePressed && (
+            <PlaceDetails onStart={() => setPriorityModal(true)} />
+          )}
+          {activeRoute && <Directions onEndTrip={() => setEndTrip(true)} />}
         </Box>
         <MapBottomModal onCardPress={(place) => handleCardPress(place)} onSearch={handleOnSearch} />
       </Box>

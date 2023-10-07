@@ -1,11 +1,12 @@
-import { createContext, useEffect, useMemo, useState } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState } from 'react';
 import io, { Socket } from 'socket.io-client';
-import { USER_API_URL } from '@mobile/../env.json';
+import { SOCKET_API_URL } from '@mobile/../env.json';
 import { PlaceFound } from '@mobile/models/module';
 import { useReduxState } from '@mobile/hooks/useReduxState';
 import { LocationObjectCoords } from 'expo-location';
 import { useDispatch } from 'react-redux';
 import { setActiveRoute } from '@mobile/store/Places/action';
+import { LocationContext } from './LocationContext';
 
 interface ISocketProvider {
   children: React.ReactNode;
@@ -17,7 +18,7 @@ export interface SocketState {
   socketRegisterUser: () => void;
   socketEndTrip: () => void;
   socketEmitLocation: () => void;
-  socketStartTrip: (placePressed: PlaceFound, priority: number, user: LocationObjectCoords) => void;
+  socketStartTrip: (placePressed: PlaceFound, priority: number) => void;
 }
 
 export const SocketContext = createContext<SocketState | null>(null);
@@ -25,13 +26,14 @@ export const SocketContext = createContext<SocketState | null>(null);
 export const SocketProvider = (props: ISocketProvider) => {
   const [socketState, setSocketState] = useState<Socket | null>(null);
   const {
-    user: { userLocation, userData },
+    user: { userData },
   } = useReduxState();
   const dispatch = useDispatch();
+  const { userLocation } = useContext(LocationContext)!;
 
   const socketConnect = () => {
-    console.log('CONECTOU');
-    const socket = io(`http://192.168.0.142:3010/navigation-socket`, {
+    const socket = io(`${SOCKET_API_URL}/navigation`, {
+      path: '/codigo3/socket-services',
       transports: ['websocket'],
     });
     setSocketState(socket);
@@ -52,21 +54,16 @@ export const SocketProvider = (props: ISocketProvider) => {
       socketState!.emit('registerUser', { userId: userData!.id ?? 1 });
       socketEmitLocation();
     } catch (err) {
-      console.log(err);
       socketState?.disconnect();
       socketConnect();
     }
   };
 
-  const socketStartTrip = (
-    placePressed: PlaceFound,
-    priority: number,
-    user: LocationObjectCoords
-  ) => {
+  const socketStartTrip = (placePressed: PlaceFound, priority: number) => {
     socketState!.emit('startTrip', {
       origin: {
-        latitude: user.latitude,
-        longitude: user.longitude,
+        latitude: userLocation!.latitude,
+        longitude: userLocation!.longitude,
       },
       destination: {
         latitude: placePressed.center[1],

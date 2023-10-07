@@ -1,17 +1,9 @@
 import { startLoading, stopLoading } from './../Loading/action';
-import { SET_USER, SET_USER_LOCATION } from './../actionsType';
+import { SET_USER } from './../actionsType';
 import { LocationObjectCoords } from 'expo-location';
 import { Dispatch } from 'redux';
 import getApiInstance from '@mobile/api/axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-
-export const setUserLocation =
-  (userLocation: LocationObjectCoords) => async (dispatch: Dispatch) => {
-    dispatch({
-      type: SET_USER_LOCATION,
-      payload: userLocation,
-    });
-  };
 
 export const authenticate =
   (userData: models.IUserAuth, callback: (success: boolean) => void) =>

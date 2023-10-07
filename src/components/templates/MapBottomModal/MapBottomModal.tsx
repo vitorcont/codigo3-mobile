@@ -14,6 +14,7 @@ import { searchPlace } from '@mobile/store/Places/action';
 import { PlaceFound } from '@mobile/models/module';
 import { FontAwesome } from '@expo/vector-icons';
 import { SearchContext } from '@mobile/context/SearchContext';
+import { LocationContext } from '@mobile/context/LocationContext';
 
 export interface MapBottomModalProps {
   onCardPress: (place: PlaceFound) => void;
@@ -26,10 +27,10 @@ const MapBottomModal = (props: MapBottomModalProps) => {
   const dispatch = useDispatch();
   const {
     places: { placesList },
-    user: { userLocation },
     modal,
   } = useReduxState();
   const { searchText, setSearchText } = useContext(SearchContext)!;
+  const { userLocation } = useContext(LocationContext)!;
 
   useEffect(() => {
     if (!blockSearch && userLocation) {

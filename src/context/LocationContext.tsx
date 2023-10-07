@@ -1,18 +1,18 @@
-import { createContext, useEffect } from 'react';
-import { Accuracy, watchPositionAsync } from 'expo-location';
-import { setUserLocation } from '@mobile/store/User/action';
-import { useDispatch } from 'react-redux';
+import { createContext, useEffect, useState } from 'react';
+import { Accuracy, LocationObjectCoords, watchPositionAsync } from 'expo-location';
 
 interface ILocationProvider {
   children: React.ReactNode;
 }
 
-export interface ILocationContext {}
+export interface ILocationContext {
+  userLocation: LocationObjectCoords | null;
+}
 
 export const LocationContext = createContext<ILocationContext | null>(null);
 
 export const LocationProvider = (props: ILocationProvider) => {
-  const dispatch = useDispatch();
+  const [userLocation, setUserLocation] = useState<LocationObjectCoords | null>(null);
 
   useEffect(() => {
     const watchLocation = async () => {
@@ -21,7 +21,7 @@ export const LocationProvider = (props: ILocationProvider) => {
           { accuracy: Accuracy.BestForNavigation, timeInterval: 500, distanceInterval: 1 },
           (position) => {
             if (position) {
-              dispatch(setUserLocation(position.coords));
+              setUserLocation(position.coords);
             }
           }
         );
@@ -37,7 +37,9 @@ export const LocationProvider = (props: ILocationProvider) => {
     watchLocation();
   }, []);
 
-  const values = {};
+  const values = {
+    userLocation,
+  };
 
   return <LocationContext.Provider value={values}>{props.children}</LocationContext.Provider>;
 };

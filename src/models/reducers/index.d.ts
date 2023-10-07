@@ -9,7 +9,6 @@ export interface SearchState {
 }
 
 export interface UserState {
-  userLocation: LocationObjectCoords | null;
   userData: models.IUser | null;
 }
 

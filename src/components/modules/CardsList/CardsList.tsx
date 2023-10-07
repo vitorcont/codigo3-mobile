@@ -4,11 +4,12 @@ import { RiskStatusEnum } from '@mobile/enum/status';
 import { useReduxState } from '@mobile/hooks/useReduxState';
 import { calculateDistance } from '@mobile/services/location';
 import theme from '@mobile/theme';
-import React, { useCallback, useRef } from 'react';
+import React, { useCallback, useContext, useRef } from 'react';
 import { Dimensions, FlatList, ViewToken } from 'react-native';
 import { FontAwesome5 } from '@expo/vector-icons';
 import * as S from './CardsList.style';
 import { LocationObjectCoords } from 'expo-location';
+import { LocationContext } from '@mobile/context/LocationContext';
 
 export interface CardsListProps {
   data: models.PlaceFound[];
@@ -17,9 +18,7 @@ export interface CardsListProps {
 }
 
 const CardsList = (props: CardsListProps) => {
-  const {
-    user: { userLocation },
-  } = useReduxState();
+  const { userLocation } = useContext(LocationContext)!;
 
   return (
     <FlatList

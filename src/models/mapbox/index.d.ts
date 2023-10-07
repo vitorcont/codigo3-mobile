@@ -36,7 +36,7 @@ export interface Steps {
   driving_side: string;
   geometry: Geometry;
   intersections: [];
-  maneuver: [];
+  maneuver: Maneuver;
 }
 
 export interface Legs {
@@ -50,7 +50,7 @@ export interface Legs {
   annotation: {
     distance: number[];
   };
-  steps: [];
+  steps: Steps[];
 }
 
 export interface MapboxglRoute {
@@ -60,6 +60,6 @@ export interface MapboxglRoute {
   weight: number;
   duration: number;
   distance: number;
-  legs: [];
+  legs: Legs[];
   geometry: Geometry;
 }

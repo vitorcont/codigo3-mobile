@@ -3,7 +3,6 @@ export const ACTION_LOADING_END = 'LOADING_END';
 
 export const SET_BOTTOM_MODAL = 'SET_BOTTOM_MODAL';
 
-export const SET_USER_LOCATION = 'SET_USER_LOCATION';
 export const SET_USER = 'SET_USER';
 export const LOGOUT = 'LOGOUT';
 
