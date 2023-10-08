@@ -1,5 +1,6 @@
+import navigationService from '@mobile/services/navigation';
 import { startLoading, stopLoading } from './../Loading/action';
-import { SET_USER } from './../actionsType';
+import { LOGOUT, SET_USER } from './../actionsType';
 import { LocationObjectCoords } from 'expo-location';
 import { Dispatch } from 'redux';
 import getApiInstance from '@mobile/api/axios';
@@ -22,6 +23,14 @@ export const authenticate =
       dispatch(stopLoading());
     }
   };
+
+export const actionLogout = () => async (dispatch: Dispatch) => {
+  await AsyncStorage.removeItem('accessToken');
+  dispatch({
+    type: LOGOUT,
+  });
+  navigationService.reset({ index: 0, routes: [{ name: 'Auth' }] });
+};
 
 export const getMe = (callback: (success: boolean) => void) => async (dispatch: Dispatch) => {
   try {

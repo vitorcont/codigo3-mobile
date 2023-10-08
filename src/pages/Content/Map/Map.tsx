@@ -5,15 +5,15 @@ import {
   Box,
   CodeModal,
   Directions,
-  EndTripModal,
   MapBottomModal,
   MapMarker,
   PathBuilder,
   Row,
+  TopBar,
 } from '@mobile/components';
 import * as S from './styles';
 import theme from '@mobile/theme';
-import { MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons, Ionicons } from '@expo/vector-icons';
 import { useReduxState } from '@mobile/hooks/useReduxState';
 import GPSIcon from '@mobile/assets/icons/ic_gps.svg';
 import { useDispatch } from 'react-redux';
@@ -23,14 +23,12 @@ import CardsList from '@mobile/components/modules/CardsList/CardsList';
 import PlaceDetails from '@mobile/components/modules/PlaceDetails/PlaceDetails';
 import { SocketContext } from '@mobile/context/SocketContext';
 import { SearchContext } from '@mobile/context/SearchContext';
-import PolygonBuilder from '@mobile/components/modules/PolygonBuilder/PolygonBuilder';
 import { setActiveRoute } from '@mobile/store/Places/action';
 import { LocationContext } from '@mobile/context/LocationContext';
 
 const Map = () => {
-  const [strokeWidth, setStrokeWidth] = useState(10);
   const [priorityModal, setPriorityModal] = useState(false);
-  const [endTrip, setEndTrip] = useState(false);
+  const [lockUser, setLockUser] = useState(false);
 
   const {
     places: { placesList, activeRoute },
@@ -51,18 +49,6 @@ const Map = () => {
 
   const dispatch = useDispatch();
   const mapRef = useRef<MapView | null>(null);
-
-  const handleIconVisibility = (region: Region) => {
-    if (strokeWidth !== 20 && region.longitudeDelta < 0.007) {
-      setStrokeWidth(20);
-    }
-    if (strokeWidth !== 15 && region.longitudeDelta > 0.007 && region.longitudeDelta < 0.1) {
-      setStrokeWidth(15);
-    }
-    if (strokeWidth !== 10 && region.longitudeDelta > 0.1) {
-      setStrokeWidth(10);
-    }
-  };
 
   const zoomTo = (coords: LocationObjectCoords) => {
     if (mapRef.current) {
@@ -108,7 +94,7 @@ const Map = () => {
           zoom: 20,
           pitch: 56,
         },
-        { duration: 2000 }
+        { duration: 1400 }
       );
     }
   };
@@ -162,22 +148,23 @@ const Map = () => {
 
   const handleStartTrip = (code: number) => {
     setPriorityModal(false);
+    setMarkers([]);
     socketContext.socketStartTrip(placePressed!, code);
+    setLockUser(true);
     centerNavigation();
   };
 
   const handleEndTrip = () => {
     dispatch(setActiveRoute(null));
     socketContext.socketEndTrip();
-    setEndTrip(false);
     centerUserLocation();
   };
 
   useEffect(() => {
-    if (activeRoute) {
+    if (activeRoute && lockUser) {
       centerNavigation();
     }
-  }, [userLocation]);
+  }, [userLocation, lockUser]);
 
   return (
     <>
@@ -186,13 +173,6 @@ const Map = () => {
         visible={priorityModal}
         onSelectPriority={(code) => {
           handleStartTrip(code);
-        }}
-      />
-      <EndTripModal
-        setVisible={setEndTrip}
-        visible={endTrip}
-        onAccept={() => {
-          handleEndTrip();
         }}
       />
       <Box flex={1}>
@@ -207,7 +187,11 @@ const Map = () => {
             latitudeDelta: 40,
             longitudeDelta: 40,
           }}
-          onRegionChange={handleIconVisibility}
+          onTouchStart={() => {
+            if (activeRoute) {
+              setLockUser(false);
+            }
+          }}
           ref={mapRef}
           provider={PROVIDER_GOOGLE}>
           {!!userLocation && (
@@ -240,6 +224,7 @@ const Map = () => {
           {!!activeRoute && <PathBuilder path={activeRoute} />}
         </S.Map>
         <Box position="absolute" height="100%" width="100%" justifyContent="flex-end">
+          <TopBar />
           {!showList && !showDetails && (
             <Row alignSelf="flex-end" alignItems="flex-end" right="2%" bottom="40%">
               <Box
@@ -259,7 +244,7 @@ const Map = () => {
           {!!markers.length && (
             <Row
               position="absolute"
-              top="6%"
+              top="12%"
               justifyContent="space-between"
               alignSelf="center"
               alignItems="flex-end"
@@ -298,15 +283,31 @@ const Map = () => {
                         .filter((item, index, arr) => arr.indexOf(item) === index)
                     : placesList.features
                 }
-                onCardPress={() => {}}
+                onCardPress={(place) => handleCardPress(place)}
                 zoomTo={zoomTo}
               />
+            </Row>
+          )}
+          {activeRoute && (
+            <Row alignSelf="flex-end" alignItems="flex-end" right="2%" bottom="40%">
+              <Box
+                marginTop="20px"
+                width="46px"
+                height="46px"
+                alignItems="center"
+                justifyContent="center"
+                backgroundColor={theme.colors.primary}
+                borderRadius="30px">
+                <S.MapButton onPress={() => setLockUser(true)}>
+                  <Ionicons name="ios-navigate-circle" size={30} color="white" />
+                </S.MapButton>
+              </Box>
             </Row>
           )}
           {!activeRoute && showDetails && placePressed && (
             <PlaceDetails onStart={() => setPriorityModal(true)} />
           )}
-          {activeRoute && <Directions onEndTrip={() => setEndTrip(true)} />}
+          {activeRoute && <Directions onEndTrip={() => handleEndTrip()} />}
         </Box>
         <MapBottomModal onCardPress={(place) => handleCardPress(place)} onSearch={handleOnSearch} />
       </Box>

@@ -1,20 +1,13 @@
-import { Row, Box, StyledText, Button } from '@mobile/components/elements';
-import {
-  calculateDistance,
-  getCenterCoordinates,
-  getDistanceFromPoints,
-  isPointInsideRoute,
-} from '@mobile/services/location';
+import { Row, Box, StyledText } from '@mobile/components/elements';
+import { getDistanceFromPoints, isPointInsideRoute } from '@mobile/services/location';
 import theme from '@mobile/theme';
-import { LocationObjectCoords } from 'expo-location';
 import React, { useContext, useEffect, useState } from 'react';
-import { FontAwesome5, MaterialCommunityIcons } from '@expo/vector-icons';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 import * as S from './styles';
 import { useReduxState } from '@mobile/hooks/useReduxState';
-import { SearchContext } from '@mobile/context/SearchContext';
 import { LocationContext } from '@mobile/context/LocationContext';
 import { useDispatch } from 'react-redux';
-import { startLoading, stopLoading } from '@mobile/store/Loading/action';
+import EndTripModal from '../EndTripModal/EndTripModal';
 
 interface IDirections {
   onEndTrip: () => void;
@@ -24,9 +17,8 @@ const Directions = (props: IDirections) => {
   const { userLocation } = useContext(LocationContext)!;
   const {
     places: { activeRoute },
-    loading,
   } = useReduxState();
-  const dispatch = useDispatch();
+  const [endTrip, setEndTrip] = useState(false);
   const [currentStep, setCurrentStep] = useState<mapbox.Steps | null>(null);
 
   const getIcon = () => {
@@ -104,62 +96,72 @@ const Directions = (props: IDirections) => {
   return !currentStep ? (
     <></>
   ) : (
-    <Row
-      position="absolute"
-      bottom="0px"
-      justifyContent="space-between"
-      alignSelf="center"
-      alignItems="flex-end"
-      zIndex={2}
-      width="100%"
-      flexDirection="column">
-      <Box
-        pdHorizontal="28px"
-        borderRadius="10px"
+    <>
+      <EndTripModal
+        setVisible={setEndTrip}
+        visible={endTrip}
+        onAccept={() => {
+          setEndTrip(false);
+          props.onEndTrip();
+        }}
+      />
+      <Row
+        position="absolute"
+        bottom="0px"
+        justifyContent="space-between"
+        alignSelf="center"
+        alignItems="flex-end"
+        zIndex={2}
         width="100%"
-        shadowBox
-        pdVertical="20px"
-        pdBottom="30px"
-        marginBottom="-15px"
-        flexDirection="column"
-        backgroundColor={theme.colors.white}>
-        <Box flex={1} alignItems="center" flexDirection="row" justifyContent="space-between">
-          <Box flexDirection="row">
-            <Box flexDirection="column" alignItems="center">
-              {getIcon()}
-              <Box>
+        flexDirection="column">
+        <Box
+          pdHorizontal="28px"
+          borderRadius="10px"
+          width="100%"
+          shadowBox
+          pdVertical="20px"
+          pdBottom="30px"
+          marginBottom="-15px"
+          flexDirection="column"
+          backgroundColor={theme.colors.white}>
+          <Box flex={1} alignItems="center" flexDirection="row" justifyContent="space-between">
+            <Box flexDirection="row">
+              <Box flexDirection="column" alignItems="center">
+                {getIcon()}
+                <Box>
+                  <StyledText
+                    value={`300m`}
+                    fontFamily={theme.fonts.semiBold}
+                    fontSize={18}
+                    color={theme.colors.placeText}
+                  />
+                </Box>
+              </Box>
+              <Box width="65%" marginLeft="20px" marginTop="1px">
                 <StyledText
-                  value={`300m`}
-                  fontFamily={theme.fonts.semiBold}
-                  fontSize={18}
+                  value={currentStep.maneuver.instruction}
                   color={theme.colors.placeText}
+                  fontFamily={theme.fonts.bold}
+                  fontSize={18}
                 />
               </Box>
             </Box>
-            <Box width="65%" marginLeft="20px" marginTop="1px">
-              <StyledText
-                value={currentStep.maneuver.instruction}
-                color={theme.colors.placeText}
-                fontFamily={theme.fonts.bold}
-                fontSize={18}
-              />
+            <Box
+              width="34px"
+              height="34px"
+              alignItems="center"
+              alignSelf="flex-start"
+              justifyContent="center"
+              backgroundColor={theme.colors.primary}
+              borderRadius="30px">
+              <S.MapButton onPress={() => setEndTrip(true)}>
+                <MaterialCommunityIcons name="close" size={26} color="white" />
+              </S.MapButton>
             </Box>
           </Box>
-          <Box
-            width="34px"
-            height="34px"
-            alignItems="center"
-            alignSelf="flex-start"
-            justifyContent="center"
-            backgroundColor={theme.colors.primary}
-            borderRadius="30px">
-            <S.MapButton onPress={props.onEndTrip}>
-              <MaterialCommunityIcons name="close" size={26} color="white" />
-            </S.MapButton>
-          </Box>
         </Box>
-      </Box>
-    </Row>
+      </Row>
+    </>
   );
 };
 

@@ -18,3 +18,12 @@ export const InformationWrapper = styled.View`
   border-top-right-radius: 15px;
   border-top-left-radius: 15px;
 `;
+
+export const Visibutton = styled.TouchableOpacity`
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  align-items: center;
+  justify-content: center;
+`;

@@ -3,10 +3,10 @@ import io, { Socket } from 'socket.io-client';
 import { SOCKET_API_URL } from '@mobile/../env.json';
 import { PlaceFound } from '@mobile/models/module';
 import { useReduxState } from '@mobile/hooks/useReduxState';
-import { LocationObjectCoords } from 'expo-location';
 import { useDispatch } from 'react-redux';
 import { setActiveRoute } from '@mobile/store/Places/action';
 import { LocationContext } from './LocationContext';
+import { startLoading, stopLoading } from '@mobile/store/Loading/action';
 
 interface ISocketProvider {
   children: React.ReactNode;
@@ -27,6 +27,7 @@ export const SocketProvider = (props: ISocketProvider) => {
   const [socketState, setSocketState] = useState<Socket | null>(null);
   const {
     user: { userData },
+    loading,
   } = useReduxState();
   const dispatch = useDispatch();
   const { userLocation } = useContext(LocationContext)!;
@@ -44,6 +45,9 @@ export const SocketProvider = (props: ISocketProvider) => {
 
     socket.on('tripPath', (route: any) => {
       dispatch(setActiveRoute(route));
+      if (loading > 0) {
+        dispatch(stopLoading());
+      }
     });
 
     return socket;
@@ -60,6 +64,8 @@ export const SocketProvider = (props: ISocketProvider) => {
   };
 
   const socketStartTrip = (placePressed: PlaceFound, priority: number) => {
+    dispatch(startLoading());
+    console.log('start trip');
     socketState!.emit('startTrip', {
       origin: {
         latitude: userLocation!.latitude,

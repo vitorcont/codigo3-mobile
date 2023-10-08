@@ -31,7 +31,7 @@ const mapBoxInstance = Axios.create({
 
 export const getApiInstance = async () => {
   const token = await AsyncStorage.getItem('accessToken');
-
+  console.log(token);
   userServiceInstance.interceptors.request.use((request) => {
     request.baseURL = USER_API_URL;
     if (token && request.headers) {

@@ -6,3 +6,5 @@ export { default as PathBuilder } from './PathBuilder/PathBuilder';
 export { default as LoadingModal } from './LoadingModal/LoadingModal';
 export { default as Directions } from './Directions/Directions';
 export { default as EndTripModal } from './EndTripModal/EndTripModal';
+export { default as TopBar } from './TopBar/TopBar';
+export { default as LogoutModal } from './LogoutModal/LogoutModal';

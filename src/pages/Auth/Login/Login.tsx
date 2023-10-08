@@ -9,8 +9,8 @@ import { requestForegroundPermissionsAsync } from 'expo-location';
 import { useDispatch } from 'react-redux';
 import { authenticate, getMe } from '@mobile/store/User/action';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { showMessage } from 'react-native-flash-message';
 import Toaster from '@mobile/services/toaster';
+import { FontAwesome } from '@expo/vector-icons';
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -19,6 +19,7 @@ const Login = () => {
     email: '',
     password: '',
   });
+  const [visible, setVisible] = useState(false);
 
   const handleSubmit = () => {
     dispatch(
@@ -49,23 +50,25 @@ const Login = () => {
   };
 
   useEffect(() => {
-    const requestLocationPermission = async () => {
+    const initiateApp = async () => {
       try {
         await requestForegroundPermissionsAsync();
       } catch (error) {
         console.log('Error requesting location permission:', error);
       }
+
+      const token = await AsyncStorage.getItem('accessToken');
+      if (!!token) {
+        dispatch(
+          getMe((successMe) => {
+            if (successMe) {
+              navigationService.reset({ index: 0, routes: [{ name: 'Content' }] });
+            }
+          })
+        );
+      }
     };
-
-    requestLocationPermission();
-
-    dispatch(
-      getMe((successMe) => {
-        if (successMe) {
-          navigationService.reset({ index: 0, routes: [{ name: 'Content' }] });
-        }
-      })
-    );
+    initiateApp();
   }, []);
 
   return (
@@ -102,6 +105,7 @@ const Login = () => {
                   marginTop: '6%',
                 }}
                 inputProps={{
+                  secureTextEntry: !visible,
                   placeholder: 'senha',
                   value: form.password,
                   onChangeText: (value) => setForm({ ...form, password: value }),
@@ -111,6 +115,15 @@ const Login = () => {
                     }, 200);
                   },
                 }}
+                EndAdornment={
+                  <S.Visibutton onPress={() => setVisible(!visible)}>
+                    {visible ? (
+                      <FontAwesome name="eye-slash" size={18} color={theme.colors.placeText} />
+                    ) : (
+                      <FontAwesome name="eye" size={18} color={theme.colors.placeText} />
+                    )}
+                  </S.Visibutton>
+                }
               />
               <Box marginTop="6%" alignSelf="center">
                 <TouchableOpacity onPress={() => navigationService.navigate('Recovery')}>
