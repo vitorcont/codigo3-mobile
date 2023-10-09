@@ -7,6 +7,7 @@ import { useDispatch } from 'react-redux';
 import { setActiveRoute } from '@mobile/store/Places/action';
 import { LocationContext } from './LocationContext';
 import { startLoading, stopLoading } from '@mobile/store/Loading/action';
+import { LocationObjectCoords } from 'expo-location';
 
 interface ISocketProvider {
   children: React.ReactNode;
@@ -18,7 +19,7 @@ export interface SocketState {
   socketRegisterUser: () => void;
   socketEndTrip: () => void;
   socketEmitLocation: () => void;
-  socketStartTrip: (placePressed: PlaceFound, priority: number) => void;
+  socketStartTrip: (placePressed: PlaceFound, priority: number, user: LocationObjectCoords) => void;
 }
 
 export const SocketContext = createContext<SocketState | null>(null);
@@ -63,13 +64,17 @@ export const SocketProvider = (props: ISocketProvider) => {
     }
   };
 
-  const socketStartTrip = (placePressed: PlaceFound, priority: number) => {
+  const socketStartTrip = (
+    placePressed: PlaceFound,
+    priority: number,
+    user: LocationObjectCoords
+  ) => {
     dispatch(startLoading());
     console.log('start trip');
     socketState!.emit('startTrip', {
       origin: {
-        latitude: userLocation!.latitude,
-        longitude: userLocation!.longitude,
+        latitude: user.latitude,
+        longitude: user.longitude,
       },
       destination: {
         latitude: placePressed.center[1],

@@ -149,7 +149,7 @@ const Map = () => {
   const handleStartTrip = (code: number) => {
     setPriorityModal(false);
     setMarkers([]);
-    socketContext.socketStartTrip(placePressed!, code);
+    socketContext.socketStartTrip(placePressed!, code, userLocation!);
     setLockUser(true);
     centerNavigation();
   };
@@ -220,6 +220,15 @@ const Map = () => {
                 onPress={() => {
                   zoomTo(marker);
                 }}></Marker>
+            ))}
+          {!!activeRoute &&
+            activeRoute.routes[0].legs[0].steps.map((step) => (
+              <Marker
+                coordinate={{
+                  latitude: step.geometry.coordinates[0][1],
+                  longitude: step.geometry.coordinates[0][0],
+                }}
+                onPress={() => {}}></Marker>
             ))}
           {!!activeRoute && <PathBuilder path={activeRoute} />}
         </S.Map>
