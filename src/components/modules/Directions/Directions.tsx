@@ -1,5 +1,5 @@
 import { Row, Box, StyledText } from '@mobile/components/elements';
-import { getDistanceFromPoints, isPointInsideRoute } from '@mobile/services/location';
+import { getDistanceFromPoints, isPointInsideRoute, maskDistance } from '@mobile/services/location';
 import theme from '@mobile/theme';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -8,6 +8,8 @@ import { useReduxState } from '@mobile/hooks/useReduxState';
 import { LocationContext } from '@mobile/context/LocationContext';
 import { useDispatch } from 'react-redux';
 import EndTripModal from '../EndTripModal/EndTripModal';
+import { SocketContext } from '@mobile/context/SocketContext';
+import { startLoading } from '@mobile/store/Loading/action';
 
 interface IDirections {
   onEndTrip: () => void;
@@ -15,13 +17,16 @@ interface IDirections {
 
 const Directions = (props: IDirections) => {
   const { userLocation } = useContext(LocationContext)!;
+  const { socket } = useContext(SocketContext)!;
+
   const {
     places: { activeRoute },
+    loading,
   } = useReduxState();
+  const dispatch = useDispatch();
   const [endTrip, setEndTrip] = useState(false);
   const [currentStep, setCurrentStep] = useState<mapbox.Steps | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
-  // const stepDistance = calculateDistance();
   const allGeometry = useMemo(() => {
     const steps = activeRoute?.routes[0].legs[0].steps!;
     const allGeometry = steps
@@ -105,7 +110,7 @@ const Directions = (props: IDirections) => {
         longitude: allGeometry[allGeometry.length - 1][0],
       }
     );
-    if (endDistance < 0.2) {
+    if (endDistance < 0.05) {
       props.onEndTrip();
       return;
     }
@@ -140,7 +145,8 @@ const Directions = (props: IDirections) => {
         setCurrentStep(step);
         break;
       } else if (allGeometry.length - 2 === i) {
-        console.log('REFRESH');
+        dispatch(startLoading());
+        socket!.emit('reloadPath');
       }
     }
   };
@@ -148,7 +154,9 @@ const Directions = (props: IDirections) => {
   useEffect(() => {
     // defineStep();
     // midRoute();
-    detectInsideRoute();
+    if (loading === 0) {
+      detectInsideRoute();
+    }
   }, [userLocation]);
 
   return !currentStep ? (
@@ -188,7 +196,7 @@ const Directions = (props: IDirections) => {
                 {getIcon()}
                 <Box>
                   <StyledText
-                    value={`${stepDistance > 0 ? stepDistance : ''}`}
+                    value={`${stepDistance > 0 ? maskDistance(stepDistance) : ''}`}
                     fontFamily={theme.fonts.semiBold}
                     fontSize={18}
                     color={theme.colors.placeText}

@@ -6,7 +6,7 @@ import { useReduxState } from '@mobile/hooks/useReduxState';
 import { useDispatch } from 'react-redux';
 import { setActiveRoute } from '@mobile/store/Places/action';
 import { LocationContext } from './LocationContext';
-import { startLoading, stopLoading } from '@mobile/store/Loading/action';
+import { setLoading, startLoading, stopLoading } from '@mobile/store/Loading/action';
 import { LocationObjectCoords } from 'expo-location';
 
 interface ISocketProvider {
@@ -46,9 +46,7 @@ export const SocketProvider = (props: ISocketProvider) => {
 
     socket.on('tripPath', (route: any) => {
       dispatch(setActiveRoute(route));
-      if (loading > 0) {
-        dispatch(stopLoading());
-      }
+      dispatch(setLoading(0));
     });
 
     return socket;
@@ -82,6 +80,9 @@ export const SocketProvider = (props: ISocketProvider) => {
       },
       priority: priority,
     } as models.ISearchRoute);
+    setTimeout(() => {
+      dispatch(setLoading(0));
+    }, 10000);
   };
 
   const socketEmitLocation = () => {

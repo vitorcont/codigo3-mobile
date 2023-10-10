@@ -7,3 +7,8 @@ export const startLoading = () => ({
 export const stopLoading = () => ({
   type: ACTION_LOADING_END,
 });
+
+export const setLoading = (value: number) => ({
+  type: ACTION_LOADING_END,
+  payload: value,
+});

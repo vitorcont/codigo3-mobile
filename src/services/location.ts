@@ -313,7 +313,7 @@ const deg2rad = (deg: number) => {
 const getPointOffset = (point: Point, pathAngle: number) => {
   const addedAngleOffset = pathAngle + Math.PI / 2;
   const subAngleOffset = pathAngle - Math.PI / 2;
-  const offsetValue = 0.0001;
+  const offsetValue = 0.00045;
 
   const addedCx = point.latitude + Math.cos(addedAngleOffset) * offsetValue;
   const addedCy = point.longitude + Math.sin(addedAngleOffset) * offsetValue;
@@ -361,4 +361,12 @@ export const isPointInsideRoute = (pointSearched: Point, pointA: Point, pointB: 
   ]);
 
   return isInside;
+};
+
+export const maskDistance = (value: number) => {
+  if (value > 1.5) {
+    return `${value.toFixed(0)} Km`;
+  } else {
+    return `${(value * 1000).toFixed(0)}m`;
+  }
 };
