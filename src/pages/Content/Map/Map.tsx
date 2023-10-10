@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import MapView, { Marker, PROVIDER_GOOGLE, Region } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE, MarkerAnimated } from 'react-native-maps';
 import { LocationObjectCoords } from 'expo-location';
 import {
   Box,
@@ -91,7 +91,7 @@ const Map = () => {
             latitude: userLocation?.latitude ?? 0,
             longitude: userLocation?.longitude ?? 0,
           },
-          zoom: 20,
+          zoom: 19,
           pitch: 56,
         },
         { duration: 1400 }
@@ -177,10 +177,10 @@ const Map = () => {
       />
       <Box flex={1}>
         <S.Map
-          showsTraffic
           pitchEnabled
-          showsMyLocationButton
-          followsUserLocation={true}
+          showsIndoors={false}
+          showsCompass={false}
+          showsBuildings={false}
           initialRegion={{
             latitude: -16.255448,
             longitude: -47.150932,
@@ -195,23 +195,20 @@ const Map = () => {
           ref={mapRef}
           provider={PROVIDER_GOOGLE}>
           {!!userLocation && (
-            <MapMarker
-              coordinate={userLocation}
-              backgroundColor={theme.colors.primary}
-              onPress={() => centerUserLocation()}
-              icon={
-                <Box
-                  width="80px"
-                  height="80px"
-                  backgroundColor="blue"
-                  justifyContent="center"
-                  alignItems="center">
-                  <Box width="2px" height="2px">
-                    <GPSIcon />
+            <>
+              <MapMarker
+                coordinate={userLocation}
+                backgroundColor={theme.colors.primary}
+                onPress={() => centerUserLocation()}
+                icon={
+                  <Box width="80px" height="80px" justifyContent="center" alignItems="center">
+                    <Box width="10px" height="10px">
+                      <GPSIcon width={50} height={50} />
+                    </Box>
                   </Box>
-                </Box>
-              }
-            />
+                }
+              />
+            </>
           )}
           {!!markers.length &&
             markers.map((marker) => (
