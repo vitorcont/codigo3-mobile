@@ -6,7 +6,7 @@ import { useReduxState } from '@mobile/hooks/useReduxState';
 import { useDispatch } from 'react-redux';
 import { setActiveRoute } from '@mobile/store/Places/action';
 import { LocationContext } from './LocationContext';
-import { setLoading, startLoading, stopLoading } from '@mobile/store/Loading/action';
+import { setLoading, startLoading } from '@mobile/store/Loading/action';
 import { LocationObjectCoords } from 'expo-location';
 
 interface ISocketProvider {

@@ -135,8 +135,8 @@ const Directions = (props: IDirections) => {
       }
       if (isInsidePath && cycleStepIndex !== stepIndex) {
         console.log(allGeometry[i][2] + ' ' + isInsidePath);
-        const step = activeRoute?.routes[0].legs[0].steps[cycleStepIndex + 1]!;
-        setStepIndex(cycleStepIndex + 1);
+        const step = activeRoute?.routes[0].legs[0].steps[cycleStepIndex]!;
+        setStepIndex(cycleStepIndex);
         setCurrentStep(step);
         break;
       }
@@ -152,8 +152,6 @@ const Directions = (props: IDirections) => {
   };
 
   useEffect(() => {
-    // defineStep();
-    // midRoute();
     if (loading === 0) {
       detectInsideRoute();
     }
