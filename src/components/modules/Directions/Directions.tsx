@@ -1,5 +1,10 @@
 import { Row, Box, StyledText } from '@mobile/components/elements';
-import { getDistanceFromPoints, isPointInsideRoute, maskDistance } from '@mobile/services/location';
+import {
+  getDistanceFromPoints,
+  getUserDistanceToStep,
+  isPointInsideRoute,
+  maskDistance,
+} from '@mobile/services/location';
 import theme from '@mobile/theme';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -17,7 +22,7 @@ interface IDirections {
 
 const Directions = (props: IDirections) => {
   const { userLocation } = useContext(LocationContext)!;
-  const { socket } = useContext(SocketContext)!;
+  const { socketReloadPath } = useContext(SocketContext)!;
 
   const {
     places: { activeRoute },
@@ -27,6 +32,7 @@ const Directions = (props: IDirections) => {
   const [endTrip, setEndTrip] = useState(false);
   const [currentStep, setCurrentStep] = useState<mapbox.Steps | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
+  const [distanceNext, setDistanceNext] = useState(0);
   const allGeometry = useMemo(() => {
     const steps = activeRoute?.routes[0].legs[0].steps!;
     const allGeometry = steps
@@ -37,57 +43,6 @@ const Directions = (props: IDirections) => {
 
     return allGeometry;
   }, [activeRoute]);
-
-  const stepDistance = useMemo(() => {
-    for (let i = 0; i < allGeometry.length - 1; i++) {
-      const isInsidePath = isPointInsideRoute(
-        {
-          ...userLocation!,
-        },
-        {
-          latitude: allGeometry[i][1],
-          longitude: allGeometry[i][0],
-        },
-        {
-          latitude: allGeometry[i + 1][1],
-          longitude: allGeometry[i + 1][0],
-        }
-      );
-      let cycleStepIndex = allGeometry[i][2];
-      if (isInsidePath) {
-        let distance = 0;
-        for (let j = i; allGeometry[j + 1][2] === cycleStepIndex; j++) {
-          if (j === i) {
-            distance =
-              distance +
-              getDistanceFromPoints(
-                { ...userLocation! },
-                {
-                  latitude: allGeometry[j][1],
-                  longitude: allGeometry[j][0],
-                }
-              );
-          } else {
-            distance =
-              distance +
-              getDistanceFromPoints(
-                {
-                  latitude: allGeometry[j][1],
-                  longitude: allGeometry[j][0],
-                },
-                {
-                  latitude: allGeometry[j + 1][1],
-                  longitude: allGeometry[j + 1][0],
-                }
-              );
-          }
-        }
-
-        return distance;
-      }
-    }
-    return 0;
-  }, [currentStep, userLocation]);
 
   const getIcon = () => {
     if (!currentStep || !currentStep.maneuver || !currentStep.maneuver.modifier) {
@@ -114,8 +69,11 @@ const Directions = (props: IDirections) => {
       props.onEndTrip();
       return;
     }
+    let userGeometryIndex = 0;
+    let stepFound = -1;
 
     for (let i = 0; i < allGeometry.length - 1; i++) {
+      console.log('----------------------');
       const isInsidePath = isPointInsideRoute(
         {
           ...userLocation!,
@@ -129,33 +87,71 @@ const Directions = (props: IDirections) => {
           longitude: allGeometry[i + 1][0],
         }
       );
-      let cycleStepIndex = allGeometry[i][2];
-      if (cycleStepIndex !== activeRoute?.routes[0].legs[0].steps.length) {
-        cycleStepIndex = allGeometry[i][2] + 1;
-      }
-      if (isInsidePath && cycleStepIndex !== stepIndex) {
-        console.log(allGeometry[i][2] + ' ' + isInsidePath);
-        const step = activeRoute?.routes[0].legs[0].steps[cycleStepIndex]!;
-        setStepIndex(cycleStepIndex);
+
+      console.log('Is Inside: ', isInsidePath);
+      if (isInsidePath) {
+        stepFound = allGeometry[i][2] + 1;
+        userGeometryIndex = i + 1;
+
+        const step = activeRoute?.routes[0].legs[0].steps[stepFound]!;
+        setStepIndex(stepFound);
         setCurrentStep(step);
         break;
-      }
-      if (allGeometry.length - 2 === i && stepIndex === 0) {
-        const step = activeRoute?.routes[0].legs[0].steps[0]!;
-        setCurrentStep(step);
+      } else if (i === 0) {
+        const startDistance = getDistanceFromPoints(
+          { ...userLocation! },
+          {
+            latitude: allGeometry[i][1],
+            longitude: allGeometry[i][0],
+          }
+        );
+        if (startDistance <= 0.1) {
+          const step = activeRoute?.routes[0].legs[0].steps[1];
+          setStepIndex(1);
+          setCurrentStep(step!);
+          userGeometryIndex = 1;
+          stepFound = 1;
+          break;
+        } else {
+          setStepIndex(0);
+          setCurrentStep(null);
+          setDistanceNext(0);
+          socketReloadPath();
+          break;
+        }
+      } else if (i === allGeometry.length - 1) {
+        setStepIndex(0);
+        setCurrentStep(null);
+        setDistanceNext(0);
+        socketReloadPath();
         break;
-      } else if (allGeometry.length - 2 === i) {
-        dispatch(startLoading());
-        socket!.emit('reloadPath');
+      }
+    }
+
+    console.log(userGeometryIndex, stepFound);
+
+    if (userGeometryIndex > 0) {
+      const distance = getUserDistanceToStep(
+        { ...userLocation! },
+        userGeometryIndex,
+        stepFound,
+        allGeometry
+      );
+      console.log('aqui', distance, stepFound);
+      if (stepFound > stepIndex) {
+        setDistanceNext(distance);
+      } else if (distance < distanceNext) {
+        setDistanceNext(distance);
       }
     }
   };
 
   useEffect(() => {
-    if (loading === 0) {
+    console.log('Loading', loading);
+    if (userLocation && loading < 1) {
       detectInsideRoute();
     }
-  }, [userLocation]);
+  }, [userLocation, activeRoute]);
 
   return !currentStep ? (
     <></>
@@ -194,7 +190,7 @@ const Directions = (props: IDirections) => {
                 {getIcon()}
                 <Box>
                   <StyledText
-                    value={`${stepDistance > 0 ? maskDistance(stepDistance) : ''}`}
+                    value={`${distanceNext > 0 ? maskDistance(distanceNext) : ''}`}
                     fontFamily={theme.fonts.semiBold}
                     fontSize={18}
                     color={theme.colors.placeText}

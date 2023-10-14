@@ -32,6 +32,7 @@ const Map = () => {
 
   const {
     places: { placesList, activeRoute },
+    loading,
   } = useReduxState();
   const { userLocation } = useContext(LocationContext)!;
   const socketContext = useContext(SocketContext)!;
@@ -165,6 +166,10 @@ const Map = () => {
       centerNavigation();
     }
   }, [userLocation, lockUser]);
+
+  useEffect(() => {
+    console.log('Changed', loading);
+  }, [loading]);
 
   return (
     <>

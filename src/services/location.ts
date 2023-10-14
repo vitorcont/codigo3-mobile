@@ -313,7 +313,7 @@ const deg2rad = (deg: number) => {
 const getPointOffset = (point: Point, pathAngle: number) => {
   const addedAngleOffset = pathAngle + Math.PI / 2;
   const subAngleOffset = pathAngle - Math.PI / 2;
-  const offsetValue = 0.00045;
+  const offsetValue = 0.001;
 
   const addedCx = point.latitude + Math.cos(addedAngleOffset) * offsetValue;
   const addedCy = point.longitude + Math.sin(addedAngleOffset) * offsetValue;
@@ -369,4 +369,44 @@ export const maskDistance = (value: number) => {
   } else {
     return `${(value * 1000).toFixed(0)}m`;
   }
+};
+
+export const getUserDistanceToStep = (
+  userLocation: Point,
+  userGeoStep: number,
+  maxStep: number,
+  geometries: number[][]
+) => {
+  let distance = 0;
+  for (let i = userGeoStep; geometries[i][2] < maxStep; i++) {
+    if (i === userGeoStep) {
+      distance =
+        distance +
+        getDistanceFromPoints(
+          {
+            latitude: userLocation.latitude,
+            longitude: userLocation.longitude,
+          },
+          {
+            latitude: geometries[i][1],
+            longitude: geometries[i][0],
+          }
+        );
+    } else {
+      distance =
+        distance +
+        getDistanceFromPoints(
+          {
+            latitude: geometries[i][1],
+            longitude: geometries[i][0],
+          },
+          {
+            latitude: geometries[i + 1][1],
+            longitude: geometries[i + 1][0],
+          }
+        );
+    }
+  }
+
+  return distance;
 };

@@ -1,4 +1,4 @@
-import { ACTION_LOADING_END, ACTION_LOADING_START } from '../actionsType';
+import { ACTION_LOADING_END, ACTION_LOADING_START, SET_LOADING } from '../actionsType';
 
 export const startLoading = () => ({
   type: ACTION_LOADING_START,
@@ -9,6 +9,6 @@ export const stopLoading = () => ({
 });
 
 export const setLoading = (value: number) => ({
-  type: ACTION_LOADING_END,
+  type: SET_LOADING,
   payload: value,
 });

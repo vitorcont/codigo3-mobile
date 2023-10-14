@@ -19,6 +19,7 @@ export interface SocketState {
   socketRegisterUser: () => void;
   socketEndTrip: () => void;
   socketEmitLocation: () => void;
+  socketReloadPath: () => void;
   socketStartTrip: (placePressed: PlaceFound, priority: number, user: LocationObjectCoords) => void;
 }
 
@@ -45,6 +46,7 @@ export const SocketProvider = (props: ISocketProvider) => {
     });
 
     socket.on('tripPath', (route: any) => {
+      console.log('recievedPath');
       dispatch(setActiveRoute(route));
       dispatch(setLoading(0));
     });
@@ -67,7 +69,7 @@ export const SocketProvider = (props: ISocketProvider) => {
     priority: number,
     user: LocationObjectCoords
   ) => {
-    dispatch(startLoading());
+    dispatch(setLoading(1));
     console.log('start trip');
     socketState!.emit('startTrip', {
       origin: {
@@ -100,6 +102,15 @@ export const SocketProvider = (props: ISocketProvider) => {
     socketState!.emit('endTrip', {});
   };
 
+  const socketReloadPath = () => {
+    console.log('Retry');
+    dispatch(setLoading(1));
+    socketState!.emit('reloadPath', {});
+    setTimeout(() => {
+      dispatch(setLoading(0));
+    }, 10000);
+  };
+
   useEffect(() => {
     socketConnect();
   }, []);
@@ -124,6 +135,7 @@ export const SocketProvider = (props: ISocketProvider) => {
       socketStartTrip,
       socketEmitLocation,
       socketEndTrip,
+      socketReloadPath,
     }),
     [socketState]
   );
