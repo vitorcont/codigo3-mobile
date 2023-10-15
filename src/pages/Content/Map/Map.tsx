@@ -25,6 +25,7 @@ import { SocketContext } from '@mobile/context/SocketContext';
 import { SearchContext } from '@mobile/context/SearchContext';
 import { setActiveRoute } from '@mobile/store/Places/action';
 import { LocationContext } from '@mobile/context/LocationContext';
+import PathPolygon from '@mobile/components/modules/PathPolygon/PathPolygon';
 
 const Map = () => {
   const [priorityModal, setPriorityModal] = useState(false);
@@ -199,6 +200,8 @@ const Map = () => {
           }}
           ref={mapRef}
           provider={PROVIDER_GOOGLE}>
+          {activeRoute && <PathPolygon />}
+
           {!!userLocation && (
             <>
               <MapMarker

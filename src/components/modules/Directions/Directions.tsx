@@ -1,9 +1,12 @@
 import { Row, Box, StyledText } from '@mobile/components/elements';
 import {
   getDistanceFromPoints,
+  getPointOffset,
   getUserDistanceToStep,
+  isPointInsidePolygon,
   isPointInsideRoute,
   maskDistance,
+  Point,
 } from '@mobile/services/location';
 import theme from '@mobile/theme';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
@@ -33,6 +36,8 @@ const Directions = (props: IDirections) => {
   const [currentStep, setCurrentStep] = useState<mapbox.Steps | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
   const [distanceNext, setDistanceNext] = useState(0);
+  const [tolerance, setTolerance] = useState(0);
+
   const allGeometry = useMemo(() => {
     const steps = activeRoute?.routes[0].legs[0].steps!;
     const allGeometry = steps
@@ -43,6 +48,35 @@ const Directions = (props: IDirections) => {
 
     return allGeometry;
   }, [activeRoute]);
+
+  const allPolyline = useMemo(() => {
+    const minusOffsetPile = [];
+    const plusOffsetQueue: Point[] = [];
+    for (let i = 0; i < allGeometry.length - 2; i++) {
+      const pointA = {
+        latitude: allGeometry[i][1],
+        longitude: allGeometry[i][0],
+      };
+      const pointB = {
+        latitude: allGeometry[i + 2][1],
+        longitude: allGeometry[i + 2][0],
+      };
+      const dy = pointB.longitude - pointA.longitude;
+      const dx = pointB.latitude - pointA.latitude;
+      const pathAngle = Math.atan2(dy, dx);
+
+      const pointAOffsets = getPointOffset(pointA, pathAngle);
+      const pointBOffsets = getPointOffset(pointB, pathAngle);
+
+      plusOffsetQueue.push(pointAOffsets.plusOffset);
+      plusOffsetQueue.push(pointBOffsets.plusOffset);
+
+      minusOffsetPile.push(pointAOffsets.minusOffset);
+      minusOffsetPile.push(pointBOffsets.minusOffset);
+    }
+    const allOffsets = plusOffsetQueue.concat(minusOffsetPile.reverse());
+    return allOffsets;
+  }, [allGeometry]);
 
   const getIcon = () => {
     if (!currentStep || !currentStep.maneuver || !currentStep.maneuver.modifier) {
@@ -69,6 +103,7 @@ const Directions = (props: IDirections) => {
       props.onEndTrip();
       return;
     }
+
     let userGeometryIndex = 0;
     let stepFound = -1;
 
@@ -88,7 +123,7 @@ const Directions = (props: IDirections) => {
         }
       );
 
-      console.log('Is Inside: ', isInsidePath);
+      console.log('Is Inside Geometries: ', isInsidePath);
       if (isInsidePath) {
         stepFound = allGeometry[i][2] + 1;
         userGeometryIndex = i + 1;
@@ -146,10 +181,132 @@ const Directions = (props: IDirections) => {
     }
   };
 
+  const detectInsideRouteUpdated = () => {
+    console.log('==================== NEW POSITION');
+    console.log('Tolerance: ', tolerance);
+    const endDistance = getDistanceFromPoints(
+      { ...userLocation! },
+      {
+        latitude: allGeometry[allGeometry.length - 1][1],
+        longitude: allGeometry[allGeometry.length - 1][0],
+      }
+    );
+
+    //Usuário a menos de 50m do final?
+    if (endDistance < 0.05) {
+      props.onEndTrip();
+      return;
+
+      //Erro de Tolerância > 8?
+    } else if (tolerance > 8) {
+      console.log('RELOAD PATH');
+      setStepIndex(0);
+      setCurrentStep(null);
+      setDistanceNext(0);
+      setTolerance(0);
+      socketReloadPath();
+      return;
+    }
+
+    const isPointInsidePoly = isPointInsidePolygon({ ...userLocation! }, allPolyline);
+    let userGeometryIndex = 0;
+    let stepFound = -1;
+
+    console.log('Inside Polygon: ', isPointInsidePoly);
+    //usuário está dentro do polygon de rota?
+    if (isPointInsidePoly) {
+      for (let i = 0; i < allGeometry.length - 1; i++) {
+        console.log('------------------ new geo');
+        const isInsideGeometry = isPointInsideRoute(
+          {
+            ...userLocation!,
+          },
+          {
+            latitude: allGeometry[i][1],
+            longitude: allGeometry[i][0],
+          },
+          {
+            latitude: allGeometry[i + 1][1],
+            longitude: allGeometry[i + 1][0],
+          }
+        );
+
+        console.log('Inside Geometries: ', isInsideGeometry);
+        // Está dentro da geo[i] geo[i+1]?
+        if (isInsideGeometry) {
+          stepFound = allGeometry[i][2] + 1;
+          userGeometryIndex = i + 1;
+
+          const step = activeRoute?.routes[0].legs[0].steps[stepFound]!;
+          setStepIndex(stepFound);
+          setCurrentStep(step);
+          setTolerance(0);
+          break;
+
+          //Está no ultimo?
+        } else if (i === allGeometry.length - 1) {
+          //Está na ultima geometria!
+          setTolerance(tolerance + 1);
+          break;
+        }
+      }
+
+      console.log(userGeometryIndex, stepFound);
+      // Cálculo de distância
+      if (userGeometryIndex > 0) {
+        const distance = getUserDistanceToStep(
+          { ...userLocation! },
+          userGeometryIndex,
+          stepFound,
+          allGeometry
+        );
+        console.log('aqui', distance, stepFound);
+        if (stepFound > stepIndex) {
+          setDistanceNext(distance);
+        } else if (distance < distanceNext) {
+          setDistanceNext(distance);
+        }
+      }
+    } else {
+      //Usuário está fora do poly principal!
+      const startDistance = getDistanceFromPoints(
+        { ...userLocation! },
+        {
+          latitude: allGeometry[0][1],
+          longitude: allGeometry[0][0],
+        }
+      );
+
+      //Está a menos de 80m do inicio?
+      if (startDistance < 0.08) {
+        console.log('Near Start');
+        const step = activeRoute?.routes[0].legs[0].steps[1];
+        setStepIndex(1);
+        setCurrentStep(step!);
+        setTolerance(0);
+        userGeometryIndex = 1;
+        stepFound = 1;
+
+        const distance = getUserDistanceToStep(
+          { ...userLocation! },
+          userGeometryIndex,
+          stepFound,
+          allGeometry
+        );
+        if (stepFound > stepIndex) {
+          setDistanceNext(distance);
+        } else if (distance < distanceNext) {
+          setDistanceNext(distance);
+        }
+      } else {
+        setTolerance(tolerance + 1);
+      }
+    }
+  };
+
   useEffect(() => {
-    console.log('Loading', loading);
-    if (userLocation && loading < 1) {
-      detectInsideRoute();
+    if (userLocation) {
+      detectInsideRouteUpdated();
     }
   }, [userLocation, activeRoute]);
 

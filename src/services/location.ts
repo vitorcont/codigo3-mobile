@@ -310,10 +310,10 @@ const deg2rad = (deg: number) => {
   return deg * (Math.PI / 180);
 };
 
-const getPointOffset = (point: Point, pathAngle: number) => {
+export const getPointOffset = (point: Point, pathAngle: number) => {
   const addedAngleOffset = pathAngle + Math.PI / 2;
   const subAngleOffset = pathAngle - Math.PI / 2;
-  const offsetValue = 0.001;
+  const offsetValue = 0.0004;
 
   const addedCx = point.latitude + Math.cos(addedAngleOffset) * offsetValue;
   const addedCy = point.longitude + Math.sin(addedAngleOffset) * offsetValue;
@@ -343,12 +343,12 @@ export const isPointInsideRoute = (pointSearched: Point, pointA: Point, pointB: 
 
   const isInside = isPointInsidePolygon({ ...pointSearched }, [
     {
-      latitude: pointAOffsets.minusOffset.latitude,
-      longitude: pointAOffsets.minusOffset.longitude,
-    },
-    {
       latitude: pointAOffsets.plusOffset.latitude,
       longitude: pointAOffsets.plusOffset.longitude,
+    },
+    {
+      latitude: pointAOffsets.minusOffset.latitude,
+      longitude: pointAOffsets.minusOffset.longitude,
     },
     {
       latitude: pointBOffsets.minusOffset.latitude,
