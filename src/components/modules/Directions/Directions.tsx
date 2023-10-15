@@ -103,7 +103,7 @@ const Directions = (props: IDirections) => {
     );
 
     //Usuário a menos de 50m do final?
-    if (endDistance < 0.05) {
+    if (endDistance < 0.08) {
       props.onEndTrip();
       return;
 

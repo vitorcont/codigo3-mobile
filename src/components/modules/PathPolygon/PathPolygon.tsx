@@ -105,10 +105,10 @@ const PathPolygon = (props: IPathPolygon) => {
 
   return (
     <>
-      {/* {allPolyline && <Polygon coordinates={allPolyline} fillColor="#038707a9" />} */}
-      {geometryPoly.map((polygon) => (
+      {allPolyline && <Polygon coordinates={allPolyline} fillColor="#038707a9" />}
+      {/* {geometryPoly.map((polygon) => (
         <Polygon coordinates={polygon} fillColor="#ff000052" />
-      ))}
+      ))} */}
     </>
   );
 };

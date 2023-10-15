@@ -313,7 +313,7 @@ const deg2rad = (deg: number) => {
 export const getPointOffset = (point: Point, pathAngle: number) => {
   const addedAngleOffset = pathAngle + Math.PI / 2;
   const subAngleOffset = pathAngle - Math.PI / 2;
-  const offsetValue = 0.0004;
+  const offsetValue = 0.00025;
 
   const addedCx = point.latitude + Math.cos(addedAngleOffset) * offsetValue;
   const addedCy = point.longitude + Math.sin(addedAngleOffset) * offsetValue;
