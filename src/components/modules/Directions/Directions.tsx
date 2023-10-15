@@ -1,5 +1,7 @@
 import { Row, Box, StyledText } from '@mobile/components/elements';
 import {
+  calculateBearing,
+  findNearestBearing,
   getDistanceFromPoints,
   getPointOffset,
   getUserDistanceToStep,
@@ -8,6 +10,7 @@ import {
   maskDistance,
   Point,
 } from '@mobile/services/location';
+import * as Speech from 'expo-speech';
 import theme from '@mobile/theme';
 import React, { useContext, useEffect, useMemo, useState } from 'react';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
@@ -31,7 +34,6 @@ const Directions = (props: IDirections) => {
     places: { activeRoute },
     loading,
   } = useReduxState();
-  const dispatch = useDispatch();
   const [endTrip, setEndTrip] = useState(false);
   const [currentStep, setCurrentStep] = useState<mapbox.Steps | null>(null);
   const [stepIndex, setStepIndex] = useState(0);
@@ -76,7 +78,7 @@ const Directions = (props: IDirections) => {
     }
     const allOffsets = plusOffsetQueue.concat(minusOffsetPile.reverse());
     return allOffsets;
-  }, [allGeometry]);
+  }, [allGeometry, activeRoute]);
 
   const getIcon = () => {
     if (!currentStep || !currentStep.maneuver || !currentStep.maneuver.modifier) {
@@ -103,24 +105,25 @@ const Directions = (props: IDirections) => {
     );
 
     //Usuário a menos de 50m do final?
-    if (endDistance < 0.08) {
+    if (endDistance < 0.05) {
       props.onEndTrip();
       return;
 
       //Erro de Tolerância > 8?
     } else if (tolerance > 8) {
       console.log('RELOAD PATH');
+      socketReloadPath();
       setStepIndex(0);
       setCurrentStep(null);
       setDistanceNext(0);
       setTolerance(0);
-      socketReloadPath();
       return;
     }
 
     const isPointInsidePoly = isPointInsidePolygon({ ...userLocation! }, allPolyline);
-    let userGeometryIndex = 0;
     let stepFound = -1;
+    let userGeometryIndex = 0;
+    let foundGeometriesIndex = [];
 
     console.log('Inside Polygon: ', isPointInsidePoly);
     //usuário está dentro do polygon de rota?
@@ -141,27 +144,54 @@ const Directions = (props: IDirections) => {
           }
         );
 
-        console.log('Inside Geometries: ', isInsideGeometry);
         // Está dentro da geo[i] geo[i+1]?
         if (isInsideGeometry) {
-          stepFound = allGeometry[i][2] + 1;
-          userGeometryIndex = i + 1;
-
-          const step = activeRoute?.routes[0].legs[0].steps[stepFound]!;
-          setStepIndex(stepFound);
-          setCurrentStep(step);
-          setTolerance(0);
-          break;
+          foundGeometriesIndex.push(i);
 
           //Está no ultimo?
-        } else if (i === allGeometry.length - 1) {
+        } else if (i === allGeometry.length - 2) {
           //Está na ultima geometria!
-          setTolerance(tolerance + 1);
-          break;
+
+          // Geometria escontradas > 0?
+          if (foundGeometriesIndex.length > 0) {
+            const userBearing =
+              userLocation?.heading! > 180
+                ? -(userLocation?.heading! - 180)
+                : userLocation?.heading!;
+            const calculatedBearings = foundGeometriesIndex.map((geometry) => {
+              const bearing = calculateBearing(
+                {
+                  latitude: allGeometry[geometry][1],
+                  longitude: allGeometry[geometry][0],
+                },
+                {
+                  latitude: allGeometry[geometry][1],
+                  longitude: allGeometry[geometry][0],
+                }
+              );
+
+              return {
+                index: geometry,
+                bearing: bearing > 180 ? -(bearing - 180) : bearing,
+              };
+            });
+            const nearest = findNearestBearing(userBearing, calculatedBearings);
+
+            console.log(nearest);
+            userGeometryIndex = nearest?.index! + 1;
+            stepFound = allGeometry[userGeometryIndex][2] + 1;
+            const step = activeRoute?.routes[0].legs[0].steps[stepFound]!;
+            setStepIndex(stepFound);
+            setCurrentStep(step);
+            setTolerance(0);
+          } else {
+            setTolerance(tolerance + 1);
+            break;
+          }
         }
       }
 
-      console.log(userGeometryIndex, stepFound);
+      // console.log(userGeometryIndex, stepFound);
       // Cálculo de distância
       if (userGeometryIndex > 0) {
         const distance = getUserDistanceToStep(
@@ -213,6 +243,16 @@ const Directions = (props: IDirections) => {
       }
     }
   };
+
+  useEffect(() => {
+    if (currentStep && distanceNext) {
+      const speak = () => {
+        const thingToSay = `Em ${maskDistance(distanceNext)}, ${currentStep.maneuver.instruction}`;
+        Speech.speak(thingToSay);
+      };
+      speak();
+    }
+  }, [currentStep]);
 
   useEffect(() => {
     if (userLocation) {

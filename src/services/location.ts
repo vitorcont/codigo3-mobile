@@ -160,137 +160,6 @@ export const calculateBearing = (pointInitial: Point, pointFinal: Point) => {
   return bearing;
 };
 
-// export const isPointInsideRoute = (pointSearched: Point, pointA: Point, pointB: Point) => {
-//   const bearing = calculateBearing(pointA, pointB);
-
-//   let latitudeFlag = false;
-//   let longitudeFlag = false;
-
-//   if ((bearing > 315 && bearing < 45) || (bearing > 134 && bearing < 225)) {
-//     //NORTE OU SUL
-//     const pointInitial = {
-//       center: {
-//         latitude: pointA.latitude,
-//         longitude: pointA.longitude,
-//       },
-//       minusOffset: {
-//         latitude: addDistance(pointA.latitude, -0.02),
-//         longitude: pointA.longitude,
-//       },
-//       plusOffset: {
-//         latitude: addDistance(pointA.latitude, 0.02),
-//         longitude: pointA.longitude,
-//       },
-//     };
-//     const pointFinal = {
-//       center: {
-//         latitude: pointB.latitude,
-//         longitude: pointB.longitude,
-//       },
-//       minusOffset: {
-//         latitude: addDistance(pointB.latitude, -0.02),
-//         longitude: pointB.longitude,
-//       },
-//       plusOffset: {
-//         latitude: addDistance(pointB.latitude, 0.02),
-//         longitude: pointB.longitude,
-//       },
-//     };
-
-//     if (
-//       pointSearched.latitude <= pointInitial.plusOffset.latitude &&
-//       pointSearched.latitude >= pointInitial.minusOffset.latitude
-//     ) {
-//       latitudeFlag = true;
-//     }
-
-//     if (
-//       pointSearched.longitude <= pointInitial.plusOffset.longitude &&
-//       pointSearched.longitude >= pointFinal.plusOffset.longitude
-//     ) {
-//       longitudeFlag = true;
-//     }
-
-//     if (
-//       pointSearched.longitude <= pointInitial.plusOffset.longitude &&
-//       pointSearched.longitude >= pointFinal.plusOffset.longitude
-//     ) {
-//       longitudeFlag = true;
-//     }
-
-//     if (longitudeFlag || latitudeFlag) {
-//       console.log('ENTROU FLAG NORTE SUL', latitudeFlag, longitudeFlag);
-//       console.log('INITIAL', pointInitial);
-//       console.log('FINAL', pointFinal);
-//       console.log('SEARCHED', pointSearched);
-
-//       console.log(bearing);
-//     }
-//   } else {
-//     //LESTE OU OESTE
-//     const pointInitial = {
-//       center: {
-//         latitude: pointA.latitude,
-//         longitude: pointA.longitude,
-//       },
-//       minusOffset: {
-//         latitude: pointA.latitude,
-//         longitude: addDistance(pointA.longitude, -0.02, true),
-//       },
-//       plusOffset: {
-//         latitude: pointA.latitude,
-//         longitude: addDistance(pointA.longitude, 0.02, true),
-//       },
-//     };
-//     const pointFinal = {
-//       center: {
-//         latitude: pointB.latitude,
-//         longitude: pointB.longitude,
-//       },
-//       minusOffset: {
-//         latitude: pointA.latitude,
-//         longitude: addDistance(pointB.longitude, -0.02, true),
-//       },
-//       plusOffset: {
-//         latitude: pointA.latitude,
-//         longitude: addDistance(pointB.longitude, 0.02, true),
-//       },
-//     };
-
-//     if (
-//       pointSearched.longitude <= pointInitial.plusOffset.longitude &&
-//       pointSearched.longitude >= pointInitial.minusOffset.longitude
-//     ) {
-//       longitudeFlag = true;
-//     }
-
-//     if (
-//       pointSearched.latitude <= pointInitial.plusOffset.latitude &&
-//       pointSearched.latitude >= pointFinal.plusOffset.latitude
-//     ) {
-//       latitudeFlag = true;
-//     }
-
-//     if (
-//       pointSearched.latitude <= pointInitial.plusOffset.latitude &&
-//       pointSearched.latitude >= pointFinal.plusOffset.latitude
-//     ) {
-//       latitudeFlag = true;
-//     }
-
-//     if (longitudeFlag || latitudeFlag) {
-//       console.log('ENTROU FLAG LESTE OESTE', latitudeFlag, longitudeFlag);
-//       console.log('INITIAL', pointInitial);
-//       console.log('FINAL', pointFinal);
-//       console.log('SEARCHED', pointSearched);
-
-//       console.log(bearing);
-//     }
-//   }
-
-//   return longitudeFlag && latitudeFlag;
-// };
-
 export const getDistanceFromPoints = (pointA: Point, pointB: Point) => {
   var R = 6371;
   var dLat = deg2rad(pointB.latitude - pointA.latitude);
@@ -409,4 +278,19 @@ export const getUserDistanceToStep = (
   }
 
   return distance;
+};
+
+export const findNearestBearing = (bearing: number, obj: { index: number; bearing: number }[]) => {
+  let nearestObject = null;
+  let closestDiff = Infinity;
+
+  for (const objeto of obj) {
+    const diferenca = Math.abs(objeto.bearing - bearing);
+    if (diferenca < closestDiff) {
+      closestDiff = diferenca;
+      nearestObject = objeto;
+    }
+  }
+
+  return nearestObject;
 };

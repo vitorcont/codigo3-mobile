@@ -201,7 +201,6 @@ const Map = () => {
           ref={mapRef}
           provider={PROVIDER_GOOGLE}>
           {activeRoute && <PathPolygon />}
-
           {!!userLocation && (
             <>
               <MapMarker
