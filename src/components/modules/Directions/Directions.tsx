@@ -91,97 +91,7 @@ const Directions = (props: IDirections) => {
     return <MaterialCommunityIcons name="arrow-up" size={70} color="black" />;
   };
 
-  const detectInsideRoute = () => {
-    const endDistance = getDistanceFromPoints(
-      { ...userLocation! },
-      {
-        latitude: allGeometry[allGeometry.length - 1][1],
-        longitude: allGeometry[allGeometry.length - 1][0],
-      }
-    );
-    if (endDistance < 0.05) {
-      props.onEndTrip();
-      return;
-    }
-
-    let userGeometryIndex = 0;
-    let stepFound = -1;
-
-    for (let i = 0; i < allGeometry.length - 1; i++) {
-      console.log('----------------------');
-      const isInsidePath = isPointInsideRoute(
-        {
-          ...userLocation!,
-        },
-        {
-          latitude: allGeometry[i][1],
-          longitude: allGeometry[i][0],
-        },
-        {
-          latitude: allGeometry[i + 1][1],
-          longitude: allGeometry[i + 1][0],
-        }
-      );
-
-      console.log('Is Inside Geometries: ', isInsidePath);
-      if (isInsidePath) {
-        stepFound = allGeometry[i][2] + 1;
-        userGeometryIndex = i + 1;
-
-        const step = activeRoute?.routes[0].legs[0].steps[stepFound]!;
-        setStepIndex(stepFound);
-        setCurrentStep(step);
-        break;
-      } else if (i === 0) {
-        const startDistance = getDistanceFromPoints(
-          { ...userLocation! },
-          {
-            latitude: allGeometry[i][1],
-            longitude: allGeometry[i][0],
-          }
-        );
-        if (startDistance <= 0.1) {
-          const step = activeRoute?.routes[0].legs[0].steps[1];
-          setStepIndex(1);
-          setCurrentStep(step!);
-          userGeometryIndex = 1;
-          stepFound = 1;
-          break;
-        } else {
-          setStepIndex(0);
-          setCurrentStep(null);
-          setDistanceNext(0);
-          socketReloadPath();
-          break;
-        }
-      } else if (i === allGeometry.length - 1) {
-        setStepIndex(0);
-        setCurrentStep(null);
-        setDistanceNext(0);
-        socketReloadPath();
-        break;
-      }
-    }
-
-    console.log(userGeometryIndex, stepFound);
-
-    if (userGeometryIndex > 0) {
-      const distance = getUserDistanceToStep(
-        { ...userLocation! },
-        userGeometryIndex,
-        stepFound,
-        allGeometry
-      );
-      console.log('aqui', distance, stepFound);
-      if (stepFound > stepIndex) {
-        setDistanceNext(distance);
-      } else if (distance < distanceNext) {
-        setDistanceNext(distance);
-      }
-    }
-  };
-
-  const detectInsideRouteUpdated = () => {
+  const pathMonitor = () => {
     console.log('==================== NEW POSITION');
     console.log('Tolerance: ', tolerance);
     const endDistance = getDistanceFromPoints(
@@ -306,7 +216,7 @@ const Directions = (props: IDirections) => {
 
   useEffect(() => {
     if (userLocation) {
-      detectInsideRouteUpdated();
+      pathMonitor();
     }
   }, [userLocation, activeRoute]);
 
