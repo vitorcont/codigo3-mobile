@@ -1,5 +1,5 @@
 import React, { useContext, useEffect, useRef, useState } from 'react';
-import MapView, { Marker, PROVIDER_GOOGLE, MarkerAnimated } from 'react-native-maps';
+import MapView, { Marker, PROVIDER_GOOGLE } from 'react-native-maps';
 import { LocationObjectCoords } from 'expo-location';
 import {
   Box,
@@ -200,7 +200,21 @@ const Map = () => {
           }}
           ref={mapRef}
           provider={PROVIDER_GOOGLE}>
-          {activeRoute && <PathPolygon />}
+          {/* {activeRoute && <PathPolygon />} */}
+          {!!activeRoute && (
+            <Marker
+              coordinate={{
+                latitude:
+                  activeRoute.routes[0].geometry.coordinates[
+                    activeRoute.routes[0].geometry.coordinates.length - 1
+                  ][1],
+                longitude:
+                  activeRoute.routes[0].geometry.coordinates[
+                    activeRoute.routes[0].geometry.coordinates.length - 1
+                  ][0],
+              }}
+              onPress={() => {}}></Marker>
+          )}
           {!!userLocation && (
             <>
               <MapMarker
@@ -224,15 +238,6 @@ const Map = () => {
                 onPress={() => {
                   zoomTo(marker);
                 }}></Marker>
-            ))}
-          {!!activeRoute &&
-            activeRoute.routes[0].legs[0].steps.map((step) => (
-              <Marker
-                coordinate={{
-                  latitude: step.geometry.coordinates[0][1],
-                  longitude: step.geometry.coordinates[0][0],
-                }}
-                onPress={() => {}}></Marker>
             ))}
           {!!activeRoute && <PathBuilder path={activeRoute} />}
         </S.Map>
