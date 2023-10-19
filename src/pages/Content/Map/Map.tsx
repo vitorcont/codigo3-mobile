@@ -25,7 +25,6 @@ import { SocketContext } from '@mobile/context/SocketContext';
 import { SearchContext } from '@mobile/context/SearchContext';
 import { setActiveRoute } from '@mobile/store/Places/action';
 import { LocationContext } from '@mobile/context/LocationContext';
-import PathPolygon from '@mobile/components/modules/PathPolygon/PathPolygon';
 
 const Map = () => {
   const [priorityModal, setPriorityModal] = useState(false);
@@ -33,7 +32,6 @@ const Map = () => {
 
   const {
     places: { placesList, activeRoute },
-    loading,
   } = useReduxState();
   const { userLocation } = useContext(LocationContext)!;
   const socketContext = useContext(SocketContext)!;
@@ -167,10 +165,6 @@ const Map = () => {
       centerNavigation();
     }
   }, [userLocation, lockUser]);
-
-  useEffect(() => {
-    console.log('Changed', loading);
-  }, [loading]);
 
   return (
     <>

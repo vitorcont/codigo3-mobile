@@ -81,11 +81,13 @@ export interface IUpdateLocation {
 }
 
 export interface IUserIndividual {
+  userId: string;
   origin: ILocation | null;
   destination: ILocation | null;
   currentLocation: ILocation | null;
   startedAt: Date | null;
   priority: number;
+  geometry: number[][];
 }
 
 export interface IUser {

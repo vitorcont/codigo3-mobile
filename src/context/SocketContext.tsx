@@ -26,11 +26,19 @@ export interface SocketState {
 export const SocketContext = createContext<SocketState | null>(null);
 
 export const SocketProvider = (props: ISocketProvider) => {
-  const [socketState, setSocketState] = useState<Socket | null>(null);
   const {
     user: { userData },
-    loading,
   } = useReduxState();
+  const [socketState, setSocketState] = useState<Socket | null>(null);
+  const [travelInfo, setTravelInfo] = useState<models.IUserIndividual>({
+    userId: userData?.id!,
+    currentLocation: null,
+    destination: null,
+    geometry: [],
+    origin: null,
+    priority: 0,
+    startedAt: null,
+  });
   const dispatch = useDispatch();
   const { userLocation } = useContext(LocationContext)!;
 
@@ -43,12 +51,6 @@ export const SocketProvider = (props: ISocketProvider) => {
 
     socket.on('retryRegistration', () => {
       socketRegisterUser();
-    });
-
-    socket.on('tripPath', (route: any) => {
-      console.log('recievedPath');
-      dispatch(setActiveRoute(route));
-      dispatch(setLoading(0));
     });
 
     return socket;
@@ -64,13 +66,13 @@ export const SocketProvider = (props: ISocketProvider) => {
     }
   };
 
-  const socketStartTrip = (
+  const socketStartTrip = async (
     placePressed: PlaceFound,
     priority: number,
     user: LocationObjectCoords
   ) => {
-    dispatch(setLoading(1));
     console.log('start trip');
+    dispatch(setLoading(1));
     socketState!.emit('startTrip', {
       origin: {
         latitude: user.latitude,
@@ -82,17 +84,45 @@ export const SocketProvider = (props: ISocketProvider) => {
       },
       priority: priority,
     } as models.ISearchRoute);
+    const date = new Date();
+    socketState!.on('tripPath', (route: mapbox.MapboxglRouteList) => {
+      console.log('recievedPath');
+      dispatch(setActiveRoute(route));
+      dispatch(setLoading(0));
+      setTravelInfo({
+        userId: userData?.id!,
+        origin: {
+          latitude: user.latitude,
+          longitude: user.longitude,
+        },
+        destination: {
+          latitude: placePressed.center[1],
+          longitude: placePressed.center[0],
+        },
+        currentLocation: {
+          latitude: user.latitude,
+          longitude: user.longitude,
+        },
+        priority: priority,
+        startedAt: travelInfo.startedAt ?? date,
+        geometry: route.routes[0].geometry.coordinates,
+      });
+    });
     setTimeout(() => {
       dispatch(setLoading(0));
     }, 10000);
   };
 
   const socketEmitLocation = () => {
+    console.log(travelInfo);
     try {
       socketState!.emit('updateLocation', {
-        latitude: userLocation!.latitude,
-        longitude: userLocation!.longitude,
-      } as models.IUpdateLocation);
+        ...travelInfo,
+        currentLocation: {
+          latitude: userLocation!.latitude,
+          longitude: userLocation!.longitude,
+        },
+      } as models.IUserIndividual);
     } catch (err) {
       socketRegisterUser();
     }
@@ -100,6 +130,14 @@ export const SocketProvider = (props: ISocketProvider) => {
 
   const socketEndTrip = () => {
     socketState!.emit('endTrip', {});
+    setTravelInfo({
+      ...travelInfo,
+      destination: null,
+      geometry: [],
+      origin: null,
+      priority: 0,
+      startedAt: null,
+    });
   };
 
   const socketReloadPath = () => {
