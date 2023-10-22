@@ -89,7 +89,7 @@ export const SocketProvider = (props: ISocketProvider) => {
       console.log('recievedPath');
       dispatch(setActiveRoute(route));
       dispatch(setLoading(0));
-      setTravelInfo({
+      const payload = {
         userId: userData?.id!,
         origin: {
           latitude: user.latitude,
@@ -106,7 +106,9 @@ export const SocketProvider = (props: ISocketProvider) => {
         priority: priority,
         startedAt: travelInfo.startedAt ?? date,
         geometry: route.routes[0].geometry.coordinates,
-      });
+      };
+      setTravelInfo(payload);
+      socketState!.emit('updateLocation', payload);
     });
     setTimeout(() => {
       dispatch(setLoading(0));

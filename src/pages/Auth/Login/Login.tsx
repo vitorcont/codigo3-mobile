@@ -42,7 +42,7 @@ const Login = () => {
   };
 
   const handleError = () => {
-    AsyncStorage.clear();
+    AsyncStorage.removeItem('accessToken');
     Toaster.error(
       'Atenção!',
       'Não foi possível validar as informações de seu usuário, verifique seus dados e tente novamente'

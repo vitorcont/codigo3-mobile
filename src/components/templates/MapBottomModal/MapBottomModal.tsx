@@ -1,8 +1,8 @@
 import BottomSheet, { BottomSheetScrollView } from '@gorhom/bottom-sheet';
 import { Box, RawBottomModal, StyledText } from '@mobile/components/elements';
 import theme from '@mobile/theme';
-import React, { forwardRef, useContext, useEffect, useRef, useState } from 'react';
-import { Feather, MaterialIcons, Ionicons, FontAwesome5 } from '@expo/vector-icons';
+import React, { useContext, useEffect, useRef, useState } from 'react';
+import { FontAwesome5 } from '@expo/vector-icons';
 import { Input } from '@mobile/components/modules';
 import { useDispatch } from 'react-redux';
 import { setBottomModal } from '@mobile/store/Modal/action';
@@ -22,8 +22,9 @@ export interface MapBottomModalProps {
 }
 
 const MapBottomModal = (props: MapBottomModalProps) => {
-  const [blockSearch, setBlockSearch] = useState(false);
   const modalRef = useRef<BottomSheet | null>(null);
+  const [typingTimeout, setTypingTimeout] = useState<any>(null);
+
   const dispatch = useDispatch();
   const {
     places: { placesList },
@@ -32,21 +33,23 @@ const MapBottomModal = (props: MapBottomModalProps) => {
   const { searchText, setSearchText } = useContext(SearchContext)!;
   const { userLocation } = useContext(LocationContext)!;
 
-  useEffect(() => {
-    if (!blockSearch && userLocation) {
-      setBlockSearch(true);
-      setTimeout(() => {
-        setBlockSearch(false);
-        dispatch(searchPlace(searchText.length ? searchText : 'hospital', userLocation!));
-      }, 1500);
-    }
-  }, [searchText]);
+  const handleTyping = (inputText: string) => {
+    setSearchText(inputText);
 
-  useEffect(() => {
-    if (!blockSearch && userLocation) {
-      dispatch(searchPlace(searchText.length ? searchText : 'hospital', userLocation));
+    if (typingTimeout) {
+      clearTimeout(typingTimeout);
     }
-  }, [blockSearch]);
+
+    const newTypingTimeout = setTimeout(() => {
+      handleUserStoppedTyping(inputText);
+    }, 1000);
+
+    setTypingTimeout(newTypingTimeout);
+  };
+
+  const handleUserStoppedTyping = (value: string) => {
+    dispatch(searchPlace(value.length ? value : 'hospital', userLocation!));
+  };
 
   useEffect(() => {
     if (modalRef) {
@@ -89,7 +92,7 @@ const MapBottomModal = (props: MapBottomModalProps) => {
             placeholder: 'Pesquisar...',
             value: searchText,
             onChangeText: (value) => {
-              setSearchText(value);
+              handleTyping(value);
             },
             onFocus: () => {
               dispatch(setBottomModal('open'));

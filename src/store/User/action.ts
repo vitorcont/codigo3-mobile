@@ -35,7 +35,8 @@ export const actionLogout = () => async (dispatch: Dispatch) => {
 export const getMe = (callback: (success: boolean) => void) => async (dispatch: Dispatch) => {
   try {
     dispatch(startLoading());
-    const instance = await getApiInstance();
+    const token = await AsyncStorage.getItem('accessToken');
+    const instance = await getApiInstance(token ?? '');
     const { data } = await instance.get('/users/me');
 
     dispatch({
@@ -56,7 +57,8 @@ export const sendRecovery =
   (email: string, callback: (success: boolean) => void) => async (dispatch: Dispatch) => {
     try {
       dispatch(startLoading());
-      const instance = await getApiInstance();
+      const token = await AsyncStorage.getItem('accessToken');
+      const instance = await getApiInstance(token ?? '');
       await instance.post('/auth/recovery-request', { email });
 
       callback(true);
@@ -72,7 +74,8 @@ export const changePassword =
   async (dispatch: Dispatch) => {
     try {
       dispatch(startLoading());
-      const instance = await getApiInstance();
+      const token = await AsyncStorage.getItem('accessToken');
+      const instance = await getApiInstance(token ?? '');
       await instance.post('/auth/recovery-request', {
         oldPassword: code,
         newPassword,
